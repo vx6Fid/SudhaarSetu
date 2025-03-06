@@ -26,14 +26,17 @@ export default function RootLayout({ children }) {
     setUserRole(role);
   }, [pathname]);
 
+  const hideLayoutForPaths = ["/login", "/signup"];
+  const shouldHideLayout = hideLayoutForPaths.includes(pathname);
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Navbar userRole={userRole} />
+        {!shouldHideLayout && <Navbar userRole={userRole} />}
         <main>{children}</main>
-        <Footer />
+        {!shouldHideLayout && <Footer />}
       </body>
     </html>
   );
