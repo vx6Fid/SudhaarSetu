@@ -1,14 +1,43 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiX, FiSearch } from "react-icons/fi";
+import ComplainCard from "../components/ComplainCard";
 
 function Page() {
   const [showBanner, setShowBanner] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedWard, setSelectedWard] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [complaints, setComplaints] = useState([]);
 
-  const categories = ["Road Repair", "Water Supply", "Garbage Collection"];
+  const categories = ["Road Repair", "Water Supply", "Garbage Collection", "Pothole"];
   const wards = ["Ward 1", "Ward 2", "Ward 3"];
+
+  useEffect(() => {
+    async function fetchComplaints() {
+      try {
+        const city = localStorage.getItem("user-city");
+        let url = new URL("http://localhost:5000/api/complaints");
+
+        if (city) url.searchParams.append("city", city);
+        if (selectedWard) url.searchParams.append("ward", selectedWard);
+        if (selectedCategory) url.searchParams.append("category", selectedCategory);
+
+        // If search query is a number, treat it as complaint_id
+        if (searchQuery && !isNaN(searchQuery)) {
+          url.searchParams.append("complaint_id", searchQuery);
+        }
+
+        const response = await fetch(url);
+        const data = await response.json();
+        setComplaints(data.complaints);
+      } catch (error) {
+        console.error("Error fetching complaints:", error);
+      }
+    }
+
+    fetchComplaints();
+  }, [selectedCategory, selectedWard, searchQuery]); // ✅ Fetch when filters or search query change
 
   return (
     <div className="p-4 bg-background min-h-screen">
@@ -17,8 +46,8 @@ function Page() {
         <div className="flex bg-secondary text-black px-4 py-3 rounded-md shadow-md w-full">
           <div className="flex items-center justify-between w-full">
             <span className="text-sm font-medium">
-              <strong>Welcome Rohan!</strong> <br />
-              Track Your Complaints and View Updates :)
+              <strong>Welcome {localStorage.getItem("user-name").split(" ")[0]}!</strong>
+              <br /> Track Your Complaints and View Updates :)
             </span>
             <button onClick={() => setShowBanner(false)}>
               <FiX className="text-lg" />
@@ -36,9 +65,7 @@ function Page() {
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="w-full md:w-48 px-4 py-2 bg-slate-700 text-white border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
           >
-            <option value="" disabled>
-              Select Category
-            </option>
+            <option value="">Select Category</option>
             {categories.map((category, index) => (
               <option key={index} value={category}>
                 {category}
@@ -54,9 +81,7 @@ function Page() {
             onChange={(e) => setSelectedWard(e.target.value)}
             className="w-full text-white md:w-48 px-4 py-2 bg-slate-700 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
           >
-            <option value="" disabled>
-              Select Ward
-            </option>
+            <option value="">Select Ward</option>
             {wards.map((ward, index) => (
               <option key={index} value={ward}>
                 {ward}
@@ -70,16 +95,21 @@ function Page() {
           <FiSearch className="text-gray-500 mr-2" />
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Search by title or Complaint ID"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="outline-none bg-transparent w-full text-gray-700 placeholder-gray-400"
           />
         </div>
       </div>
 
-      {/* ✅ Display Selected Values */}
-      <div className="mt-4 text-sm text-gray-600">
-        <p>Selected Category: {selectedCategory || "None"}</p>
-        <p>Selected Ward: {selectedWard || "None"}</p>
+      {/* Display Complaint Cards */}
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {complaints.length > 0 ? (
+          complaints.map((complaint) => <ComplainCard key={complaint.id} complaint={complaint} />)
+        ) : (
+          <p className="text-gray-500">No complaints found.</p>
+        )}
       </div>
     </div>
   );

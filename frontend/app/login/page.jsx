@@ -28,6 +28,11 @@ function LoginPage() {
         const data = await response.json();
         localStorage.setItem("token", data.token);
         localStorage.setItem("userRole", data.user.role);
+        localStorage.setItem("userId", data.user.id);
+        localStorage.setItem("user-name", data.user.name);
+        localStorage.setItem("user-city", data.user.city);
+        
+        
         switch (role) {
           case "citizen":
             window.location.href = "/citizen";
