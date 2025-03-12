@@ -7,6 +7,7 @@ const { Pool } = require('pg');
 const authRoutes = require("./src/routes/auth");
 const adminRoutes = require("./src/routes/admin");
 const complaintRoutes = require("./src/routes/complaints");
+const userRoutes = require("./src/routes/user");
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", complaintRoutes);
 app.use("/uploads", express.static("uploads"));
+app.use("/api", userRoutes);
 
 // Test Route 
 app.get('/', (req, res) => {

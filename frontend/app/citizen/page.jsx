@@ -17,7 +17,7 @@ function Page() {
     async function fetchComplaints() {
       try {
         const city = localStorage.getItem("user-city");
-        let url = new URL("http://localhost:5000/api/complaints");
+        let url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaints`);
 
         if (city) url.searchParams.append("city", city);
         if (selectedWard) url.searchParams.append("ward", selectedWard);

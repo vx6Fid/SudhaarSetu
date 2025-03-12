@@ -26,7 +26,7 @@ const Navbar = ({ userRole }) => {
 
   return (
     <div className="mx-1 my-1 h-20">
-      <nav className="bg-background border border-black w-full rounded-lg shadow-md">
+      <nav className="bg-background border border-black w-full fixed top-0 left-0 z-50">
         <div className="flex justify-between items-center max-w-6xl mx-auto p-4">
           {/* Logo */}
           <Link href="/">
@@ -90,11 +90,11 @@ const NavLinks = ({ userRole, pathname, mobile }) => {
     <>
       {userRole === "citizen" && (
         <div className={`flex ${mobile ? "flex-col w-full text-center" : "items-center space-x-3"}`}>
-          <NavItem href="/track-complaint" pathname={pathname} text="Track" />
+          <NavItem href="/citizen/track" pathname={pathname} text="Track" />
           {separator}
-          <NavItem href="/my-complaints" pathname={pathname} text="My Complaints" />
+          <NavItem href="/citizen/my-complaints" pathname={pathname} text="My Complaints" />
           {separator}
-          <NavItem href="/profile" pathname={pathname} text="Profile" />
+          <NavItem href="/citizen/profile" pathname={pathname} text="Profile" />
           {separator}
           <NavItem href="/citizen" pathname={pathname} text="Home" />
         </div>

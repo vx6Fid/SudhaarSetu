@@ -5,11 +5,12 @@ const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 const upload = require("../middleware/uploadMiddleware"); // For proof image uploads
 
+
+// Create-Complaint
 router.post("/complaint", authMiddleware, async (req, res) => {
     const { category, location, image, ward_no, city } = req.body;
     const user_id = req.user?.user;  
 
-    console.log("Extracted user_id:", user_id);  // Debugging log
 
     try {
         // Check for duplicate complaints (same location & category)
@@ -121,7 +122,7 @@ router.put("/complaints/:id/status", authMiddleware, roleMiddleware(["field_offi
 
 // Fetch complaints by ward, city, or assigned officer
 router.get("/complaints", async (req, res) => {
-    const { ward, city, officer } = req.query;
+    const { ward, city, officer, category, complaint_id } = req.query;
     let query = "SELECT * FROM complaints WHERE 1=1";
     const values = [];
     let count = 1; // Placeholder index
@@ -129,6 +130,16 @@ router.get("/complaints", async (req, res) => {
     if (ward) {
         query += ` AND ward_no = $${count}`;
         values.push(ward);
+        count++;
+    }
+    if (category) {
+        query += ` AND category = $${count}`;
+        values.push(category);
+        count++;
+    }
+    if (complaint_id) {
+        query += ` AND complaint_id = $${count}`;
+        values.push(complaint_id);
         count++;
     }
     if (city) {
@@ -151,5 +162,28 @@ router.get("/complaints", async (req, res) => {
     }
 });
 
+router.get("/complaint/:complaint_id", async (req, res) => {                                        
+    const { complaint_id } = req.params; // Corrected param name
+
+    if (!complaint_id) {                                                                                      
+        return res.status(400).json({ error: "Complaint ID is required" });                         
+    }                                                                                                
+
+    try {                                                                                            
+        const query = "SELECT * FROM complaints WHERE id = $1";                           
+        const values = [complaint_id];                                                                
+
+        const result = await pool.query(query, values);                                              
+
+        if (result.rows.length === 0) {                                                             
+            return res.status(404).json({ error: "Complaint not found" });                          
+        }                                                                                            
+
+        res.json({ complaint: result.rows[0] }); // Return single complaint object, not an array    
+    } catch (error) {                                                                               
+        console.error("Error fetching complaint:", error);                                          
+        res.status(500).json({ error: "Server error" });                                            
+    }                                                                                                
+});
 
 module.exports = router;
