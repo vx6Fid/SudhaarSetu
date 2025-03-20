@@ -20,7 +20,6 @@ const EditProfile = () => {
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Fetch userID and role from localStorage and set in user object
   useEffect(() => {
     const storedUserID = localStorage.getItem("userId");
     const storedUserRole = localStorage.getItem("userRole");
@@ -38,7 +37,6 @@ const EditProfile = () => {
     }));
   }, []);
 
-  // Fetch user details from API
   useEffect(() => {
     if (!user.user_id || !user.role) return;
 
@@ -46,7 +44,12 @@ const EditProfile = () => {
       try {
         const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user`);
         url.searchParams.append("user_id", user.user_id);
-        url.searchParams.append("role", user.role);
+        url.searchParams.append(
+          "role",
+          user.role === "field_officer" || user.role === "call_center"
+            ? "officer"
+            : "citizen"
+        );
 
         const response = await fetch(url, { method: "GET" });
 
@@ -57,7 +60,7 @@ const EditProfile = () => {
         const data = await response.json();
         setUser((prevUser) => ({
           ...prevUser,
-          ...data.user, // Merge API data into user state
+          ...data.user,
         }));
       } catch (err) {
         setError(err);
@@ -86,7 +89,7 @@ const EditProfile = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(user), // Send entire user object
+          body: JSON.stringify(user),
         }
       );
 
@@ -103,9 +106,11 @@ const EditProfile = () => {
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-red-500">Error: {error.message}</p>;
 
+  // Check if user is a citizen
+  const isCitizen = user.role === "citizen";
+
   return (
     <div>
-      {/* Header Section */}
       <div className="mx-2 relative bg-secondary h-36 flex items-center rounded-lg px-2 my-2 justify-center">
         <button className="absolute left-4 top-4 text-white">
           <Link href="/citizen/profile">
@@ -123,7 +128,6 @@ const EditProfile = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name */}
           <div>
             <label className="block text-gray-700 font-medium">Name</label>
             <input
@@ -135,7 +139,6 @@ const EditProfile = () => {
             />
           </div>
 
-          {/* Email */}
           <div>
             <label className="block text-gray-700 font-medium">Email</label>
             <input
@@ -147,7 +150,6 @@ const EditProfile = () => {
             />
           </div>
 
-          {/* Phone */}
           <div>
             <label className="block text-gray-700 font-medium">Phone</label>
             <input
@@ -159,7 +161,7 @@ const EditProfile = () => {
             />
           </div>
 
-          {/* State */}
+          {/* State (Disabled if not a citizen) */}
           <div>
             <label className="block text-gray-700 font-medium">State</label>
             <input
@@ -167,11 +169,14 @@ const EditProfile = () => {
               name="state"
               value={user.state}
               onChange={handleChange}
-              className="w-full bg-background border border-gray-400 p-2 rounded-md"
+              disabled={!isCitizen}
+              className={`w-full bg-background border border-gray-400 p-2 rounded-md ${
+                !isCitizen ? "bg-gray-200 text-gray-600 cursor-not-allowed" : ""
+              }`}
             />
           </div>
 
-          {/* City */}
+          {/* City (Disabled if not a citizen) */}
           <div>
             <label className="block text-gray-700 font-medium">City</label>
             <input
@@ -179,11 +184,14 @@ const EditProfile = () => {
               name="city"
               value={user.city}
               onChange={handleChange}
-              className="w-full bg-background border border-gray-400 p-2 rounded-md"
+              disabled={!isCitizen}
+              className={`w-full bg-background border border-gray-400 p-2 rounded-md ${
+                !isCitizen ? "bg-gray-200 text-gray-600 cursor-not-allowed" : ""
+              }`}
             />
           </div>
 
-          {/* Ward */}
+          {/* Ward (Disabled if not a citizen) */}
           <div>
             <label className="block text-gray-700 font-medium">Ward</label>
             <input
@@ -191,11 +199,13 @@ const EditProfile = () => {
               name="ward"
               value={user.ward}
               onChange={handleChange}
-              className="w-full bg-background border border-gray-400 p-2 rounded-md"
+              disabled={!isCitizen}
+              className={`w-full bg-background border border-gray-400 p-2 rounded-md ${
+                !isCitizen ? "bg-gray-200 text-gray-600 cursor-not-allowed" : ""
+              }`}
             />
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             className="w-full bg-green-800 bg-opacity-90 text-white py-2 rounded-md hover:bg-green-900 transition"

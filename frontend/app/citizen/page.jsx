@@ -47,7 +47,7 @@ function Page() {
           <div className="flex items-center justify-between w-full">
             <span className="text-sm font-medium">
               <strong>Welcome {localStorage.getItem("user-name").split(" ")[0]}!</strong>
-              <br /> Track Your Complaints and View Updates :)
+              <br /> Track Your Complaints and View Updates {":)"}
             </span>
             <button onClick={() => setShowBanner(false)}>
               <FiX className="text-lg" />

@@ -11,49 +11,50 @@ function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const officerRoles = new Set(["field_officer", "admin", "call_center"]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
+    const loginUrl = officerRoles.has(role)
+      ? "/api/officer/login"
+      : "/api/auth/login";
+
     try {
-      const response = await fetch(`${BASE_URL}/api/auth/login`, {
+      const response = await fetch(`${BASE_URL}${loginUrl}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
       });
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userRole", data.user.role);
-        localStorage.setItem("userId", data.user.id);
-        localStorage.setItem("user-name", data.user.name);
-        localStorage.setItem("user-city", data.user.city);
-        
-        
-        switch (role) {
-          case "citizen":
-            window.location.href = "/citizen";
-            break;
-          case "field_officer":
-            window.location.href = "/field-officer";
-            break;
-          case "admin":
-            window.location.href = "/admin";
-            break;
-          case "call_center":
-            window.location.href = "/call-center";
-            break;
-          default:
-            window.location.href = "/citizen";
-        }
 
-      } else {
+      if (!response.ok) {
         const data = await response.json();
-        setError(data.message);
+        setError(data.message || "Login failed.");
+        return;
       }
+
+      const data = await response.json();
+      const userData = role === "citizen" ? data.user : data.officer;
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userRole", role);
+      localStorage.setItem("userId", userData?.id || "");
+      localStorage.setItem("user-name", userData?.name || "");
+      localStorage.setItem("user-city", userData?.city || "");
+
+      // Redirect user based on role
+      const roleRedirects = {
+        citizen: "/citizen",
+        field_officer: "/field-officer",
+        admin: "/admin",
+        call_center: "/call-center",
+      };
+
+      window.location.href = roleRedirects[role] || "/citizen";
     } catch (err) {
       setError("Failed to login, Error: " + err.message);
     } finally {
@@ -82,13 +83,13 @@ function LoginPage() {
 
         {/* Form */}
         <form onSubmit={handleLogin} className="space-y-4">
-          {/* Phone Number */}
+          {/* Email Input */}
           <div className="relative">
             <label className="absolute top-[-10px] left-3 bg-background text-sm px-1 text-gray-600">
               Email
             </label>
             <input
-              type="text"
+              type="email"
               className="w-full px-4 py-3 border border-gray-500 rounded-md bg-background outline-none text-gray-700"
               placeholder="sudhaar@mail.com"
               value={email}
@@ -97,9 +98,9 @@ function LoginPage() {
             />
           </div>
 
-          {/* Password */}
+          {/* Password Input */}
           <div className="relative">
-            <label className="absolute top-[-10px] left-3 bg-opacity-50 bg-background text-sm px-1 text-gray-600">
+            <label className="absolute top-[-10px] left-3 bg-background text-sm px-1 text-gray-600">
               Password
             </label>
             <input

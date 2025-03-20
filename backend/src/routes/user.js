@@ -31,7 +31,6 @@ router.get("/user", async (req, res) => {
     }
 });
 
-// Update user details
 router.put("/update-user", async (req, res) => {
     const { user_id, role, name, phone, city, ward, state, email, password } = req.body;
 
@@ -40,14 +39,14 @@ router.put("/update-user", async (req, res) => {
         return res.status(400).json({ error: "user_id and role are required" });
     }
 
-    // Validate role (prevent SQL injection)
-    const validRoles = ["citizen", "officer"];
+    // Validate role
+    const validRoles = ["citizen", "officer", "field_officer"];
     if (!validRoles.includes(role)) {
         return res.status(400).json({ error: "Invalid role" });
     }
 
     // Select the correct table
-    const table = role === "citizen" ? "users" : role === "admin" ? "admins" : "officers";
+    const table = role === "citizen" ? "users" : "officers";
 
     // Prepare updates dynamically
     let updates = [];
@@ -56,10 +55,14 @@ router.put("/update-user", async (req, res) => {
 
     if (name) { updates.push(`name = $${count}`); values.push(name); count++; }
     if (phone) { updates.push(`phone = $${count}`); values.push(phone); count++; }
-    if (city) { updates.push(`city = $${count}`); values.push(city); count++; }
-    if (ward) { updates.push(`ward = $${count}`); values.push(ward || null); count++; } // Handle empty ward
-    if (state) { updates.push(`state = $${count}`); values.push(state); count++; }
     if (email) { updates.push(`email = $${count}`); values.push(email); count++; }
+
+    // Allow state, city, and ward updates **only for citizens**
+    if (role === "citizen") {
+        if (city) { updates.push(`city = $${count}`); values.push(city); count++; }
+        if (ward) { updates.push(`ward = $${count}`); values.push(ward || null); count++; }
+        if (state) { updates.push(`state = $${count}`); values.push(state); count++; }
+    }
 
     // Hash password securely
     if (password) {
@@ -100,5 +103,6 @@ router.put("/update-user", async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+
 
 module.exports = router;

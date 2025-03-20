@@ -111,37 +111,86 @@ router.delete("/admin/remove-user/:id", authMiddleware, roleMiddleware(["admin"]
     }
 });
 
-// Create Field Officer or Call Center Staff
-router.post("/admin/create-user", authMiddleware, roleMiddleware(["admin"]), async (req, res) => {
-    const { name, email, password, phone, address, role, ward } = req.body;
-    const adminCity = req.user.city;
-    
-    if (!["field_officer", "call_center"].includes(role)) {
-        return res.status(400).json({ error: "Invalid role" });
+// Create Field Officer or Call Center Staff  
+router.post("/admin/create-user", authMiddleware, roleMiddleware(["admin"]), async (req, res) => {  
+    const { name, email, password, phone, address, role, ward, city, state } = req.body;  
+
+    if (!["field_officer", "call_center"].includes(role)) {  
+        return res.status(400).json({ error: "Invalid role" });  
+    }  
+
+    try {  
+        // Check if the user already exists  
+        const existingUser = await pool.query("SELECT * FROM officers WHERE email = $1", [email]);  
+        if (existingUser.rows.length > 0) {  
+            return res.status(400).json({ error: "User already exists" });  
+        }  
+
+        // Hashing the password  
+        const salt = await bcrypt.genSalt(10);  
+        const hashedPassword = await bcrypt.hash(password, salt);  
+
+        // Inserting the new user with city and state  
+        const newUser = await pool.query(  
+            "INSERT INTO officers (name, email, password, phone, address, role, city, state, ward) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",  
+            [name, email, hashedPassword, phone, address, role, city, state, ward]  
+        );  
+
+        res.status(201).json({ message: "User created successfully", user: newUser.rows[0] });  
+    } catch (err) {  
+        console.error(err);  
+        res.status(500).json({ error: "Server error" });  
+    }  
+});  
+
+router.post("/admin/assign-field-officer", async (req, res) => {
+    const { admin_id, complaint_id, field_officer_id } = req.body;
+
+    // Validate required fields
+    if (!admin_id || !complaint_id || !field_officer_id) {
+        return res.status(400).json({ error: "admin_id, complaint_id, and field_officer_id are required" });
     }
 
     try {
-        // Check if the user already exist
-        const existingUser = await pool.query("SELECT * FROM officers WHERE email = $1", [email]);
-        if (existingUser.rows.length > 0) {
-            return res.status(400).json({ error: "User already exists" });
+        // Verify that the admin exists
+        const adminCheck = await pool.query("SELECT id FROM admins WHERE id = $1", [admin_id]);
+        if (adminCheck.rows.length === 0) {
+            return res.status(403).json({ error: "Unauthorized: Admin does not exist" });
         }
 
-        // Hashing the password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        // Check if the complaint exists
+        const complaintCheck = await pool.query("SELECT id, field_officer_id FROM complaints WHERE id = $1", [complaint_id]);
+        if (complaintCheck.rows.length === 0) {
+            return res.status(404).json({ error: "Complaint not found" });
+        }
 
-        // Inserting the new user
-        const newUser = await pool.query(
-            "INSERT INTO officers (name, email, password, phone, address, role, city, ward) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
-            [name, email, hashedPassword, phone, address, role, adminCity, ward]
-        );
+        // Check if the field officer exists
+        const officerCheck = await pool.query("SELECT id FROM officers WHERE id = $1 AND role = 'field_officer'", [field_officer_id]);
+        if (officerCheck.rows.length === 0) {
+            return res.status(400).json({ error: "Invalid field officer ID" });
+        }
 
-        res.status(201).json({ message: "User created successfully", user: newUser.rows[0] });
-    } catch (err) {
-        console.error(err);
+        // Check if the complaint is already assigned
+        if (complaintCheck.rows[0].field_officer_id) {
+            return res.status(400).json({ error: "Complaint already assigned to a field officer" });
+        }
+
+        // Assign the field officer to the complaint
+        const updateQuery = `
+            UPDATE complaints 
+            SET field_officer_id = $1
+            WHERE id = $2 
+            RETURNING id, field_officer_id
+        `;
+        const result = await pool.query(updateQuery, [field_officer_id, complaint_id]);
+
+        res.json({ message: "Field officer assigned successfully", complaint: result.rows[0] });
+
+    } catch (error) {
+        console.error("Assignment error:", error);
         res.status(500).json({ error: "Server error" });
     }
 });
+
 
 module.exports = router;
