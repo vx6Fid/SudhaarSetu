@@ -8,9 +8,8 @@ const upload = require("../middleware/uploadMiddleware"); // For proof image upl
 
 // Create-Complaint
 router.post("/complaint", authMiddleware, async (req, res) => {
-    const { category, location, image, ward_no, city } = req.body;
+    const { category, location, image, ward_no, city, state } = req.body;
     const user_id = req.user?.user;  
-
 
     try {
         // Check for duplicate complaints (same location & category)
@@ -23,10 +22,13 @@ router.post("/complaint", authMiddleware, async (req, res) => {
             return res.status(400).json({ error: "A complaint already exists for this issue in the same location." });
         }
 
-        // Insert Complaint
+        // Insert Complaint (Corrected)
         const newComplaint = await pool.query(
-            "INSERT INTO complaints (user_id, category, location, image, status, ward_no, city, upvotes, views, total_comments, comments) VALUES ($1, $2, $3, $4, 'pending', $5, $6, 0, 0, 0, NULL) RETURNING *",
-            [user_id, category, location, image, ward_no, city]
+            `INSERT INTO complaints 
+            (user_id, category, location, image, status, ward_no, city, "State", upvotes, views, total_comments, comments) 
+            VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, 0, 0, 0, NULL::UUID) 
+            RETURNING *`,
+            [user_id, category, location, image, ward_no, city, state]
         );
         
         res.status(201).json({ message: "Complaint created successfully", complaint: newComplaint.rows[0] });
@@ -35,7 +37,6 @@ router.post("/complaint", authMiddleware, async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
-
 
 
 // Toggle upvote on a complaint
