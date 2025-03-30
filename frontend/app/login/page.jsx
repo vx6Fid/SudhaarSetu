@@ -33,7 +33,7 @@ function LoginPage() {
 
       if (!response.ok) {
         const data = await response.json();
-        setError(data.message || "Login failed.");
+        setError(data.error || "Login failed.");
         return;
       }
 
@@ -79,7 +79,7 @@ function LoginPage() {
         </p>
 
         {/* Error Message */}
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
         {/* Form */}
         <form onSubmit={handleLogin} className="space-y-4">

@@ -163,6 +163,7 @@ router.get("/complaints", async (req, res) => {
     }
 });
 
+// Fetch Complaint by Complaint ID
 router.get("/complaint/:complaint_id", async (req, res) => {                                        
     const { complaint_id } = req.params; // Corrected param name
 
@@ -186,5 +187,25 @@ router.get("/complaint/:complaint_id", async (req, res) => {
         res.status(500).json({ error: "Server error" });                                            
     }                                                                                                
 });
+
+// Fetch complaints by user_id
+router.get("/user/complaints", async (req, res) => {
+    const { user_id } = req.query;
+
+    if (!user_id) {
+        return res.status(400).json({ error: "User ID is required" });
+    }
+
+    try {
+        const query = "SELECT * FROM complaints WHERE user_id = $1 ORDER BY created_at DESC";
+        const result = await pool.query(query, [user_id]);
+
+        res.json({ complaints: result.rows });
+    } catch (error) {
+        console.error("Error fetching complaints:", error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 
 module.exports = router;
