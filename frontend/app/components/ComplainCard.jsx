@@ -23,7 +23,7 @@ function ComplainCard({ complaint }) {
   // Pin icon for map markers
   const pinIcon = new L.Icon({
     iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
-    iconSize: [32, 42],
+    iconSize: [32, 32],
     iconAnchor: [16, 42],
     popupAnchor: [0, -42],
   });
@@ -32,7 +32,7 @@ function ComplainCard({ complaint }) {
   const toggleView = () => setViewMode(!viewMode);
 
   return (
-    <div className="bg-[#F8E7D2] shadow-lg rounded-xl p-5 border border-gray-300 relative max-w-[600px] mx-auto sm:max-w-full max-w-[90%]">
+    <div className="bg-[#F8E7D2] shadow-lg rounded-xl p-5 border border-gray-300 relative mx-auto sm:max-w-full max-w-[90%]">
       {/* Category */}
       <h3 className="text-lg md:text-xl font-semibold text-gray-800">
         {complaint.category}

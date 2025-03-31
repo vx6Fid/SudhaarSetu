@@ -44,7 +44,7 @@ function LoginPage() {
       localStorage.setItem("userRole", role);
       localStorage.setItem("userId", userData?.id || "");
       localStorage.setItem("user-name", userData?.name || "");
-      localStorage.setItem("user-city", userData?.city || "");
+      localStorage.setItem("user-ward", userData?.ward || "");
 
       // Redirect user based on role
       const roleRedirects = {
