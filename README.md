@@ -1,6 +1,3 @@
-md
-Copy
-Edit
 # 🚀 SudhaarSetu
 
 A streamlined municipal complaint resolution platform.
