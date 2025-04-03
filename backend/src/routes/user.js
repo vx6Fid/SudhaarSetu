@@ -104,5 +104,94 @@ router.put("/update-user", async (req, res) => {
     }
 });
 
+// Like a complaint
+router.post("/complaints/:id/like", async (req, res) => {
+    const { id } = req.params;
+    const { user_id } = req.body;
+
+    if (!user_id) {
+        return res.status(400).json({ error: "user_id is required" });
+    }
+
+    try {
+        // Check if the complaint exists
+        const complaintExists = await pool.query("SELECT 1 FROM complaints WHERE id = $1", [id]);
+        if (complaintExists.rowCount === 0) {
+            return res.status(404).json({ error: "Complaint not found" });
+        }
+
+        // Check if user has already liked the complaint
+        const existingLike = await pool.query(
+            "SELECT 1 FROM complaint_upvotes WHERE user_id = $1 AND complaint_id = $2",
+            [user_id, id]
+        );
+
+        if (existingLike.rowCount > 0) {
+            return res.status(400).json({ error: "You have already liked this complaint." });
+        }
+
+        // Start a transaction
+        await pool.query("BEGIN");
+
+        // Increment upvotes
+        await pool.query("UPDATE complaints SET upvotes = upvotes + 1 WHERE id = $1", [id]);
+
+        // Insert like into the database
+        await pool.query(
+            "INSERT INTO complaint_upvotes (user_id, complaint_id, created_at) VALUES ($1, $2, NOW())",
+            [user_id, id]
+        );
+
+        // Commit transaction
+        await pool.query("COMMIT");
+
+        res.json({ message: "Complaint liked successfully." });
+
+    } catch (error) {
+        console.error(error);
+        await pool.query("ROLLBACK"); // Rollback transaction on error
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Comment on a complaint
+router.post("/complaints/:id/comment", async (req, res) => {
+    const { id } = req.params;
+    const { user_id, comment_text } = req.body;
+
+    if (!user_id || !comment_text.trim()) {
+        return res.status(400).json({ error: "user_id and non-empty comment_text are required" });
+    }
+
+    try {
+        // Check if the complaint exists
+        const complaintExists = await pool.query("SELECT 1 FROM complaints WHERE id = $1", [id]);
+        if (complaintExists.rowCount === 0) {
+            return res.status(404).json({ error: "Complaint not found" });
+        }
+
+        // Start a transaction
+        await pool.query("BEGIN");
+
+        // Insert the comment
+        const newComment = await pool.query(
+            "INSERT INTO comments (id, user_id, complaint_id, comment_text, likes_count, views_count, created_at) VALUES (gen_random_uuid(), $1, $2, $3, 0, 0, NOW()) RETURNING *",
+            [user_id, id, comment_text]
+        );
+
+        // Increase the total_comments count in the complaints table
+        await pool.query("UPDATE complaints SET total_comments = total_comments + 1 WHERE id = $1", [id]);
+
+        // Commit transaction
+        await pool.query("COMMIT");
+
+        res.json({ message: "Comment added successfully.", comment: newComment.rows[0] });
+
+    } catch (error) {
+        console.error(error);
+        await pool.query("ROLLBACK"); // Rollback transaction on error
+        res.status(500).json({ error: "Server error" });
+    }
+});
 
 module.exports = router;

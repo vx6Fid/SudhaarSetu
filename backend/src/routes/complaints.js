@@ -3,8 +3,12 @@ const router = express.Router();
 const pool = require("../config/db");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
-const upload = require("../middleware/uploadMiddleware"); // For proof image uploads
+const multer = require("multer");
+const FormData = require("form-data");
+const fetch = require("node-fetch");
+require("dotenv").config();
 
+const upload = multer();
 
 // Create-Complaint
 router.post("/complaint", authMiddleware, async (req, res) => {
@@ -39,87 +43,85 @@ router.post("/complaint", authMiddleware, async (req, res) => {
 });
 
 
-// Toggle upvote on a complaint
-router.post("/complaints/:id/upvote", authMiddleware, async (req, res) => {
-    const userId = req.user.id;
-    const complaintId = req.params.id;
-    
-    try {
-        // Check if user already upvoted
-        const upvoteCheck = await pool.query(
-            "SELECT * FROM complaint_upvotes WHERE user_id = $1 AND complaint_id = $2", 
-            [userId, complaintId]
-        );
-        
-        if (upvoteCheck.rows.length > 0) {
-            // Remove upvote (toggle off)
-            await pool.query("DELETE FROM complaint_upvotes WHERE user_id = $1 AND complaint_id = $2", [userId, complaintId]);
-            await pool.query("UPDATE complaints SET upvotes = upvotes - 1 WHERE id = $1", [complaintId]);
-            return res.json({ message: "Upvote removed." });
-        }
-        
-        // Add upvote
-        await pool.query("INSERT INTO complaint_upvotes (user_id, complaint_id) VALUES ($1, $2)", [userId, complaintId]);
-        await pool.query("UPDATE complaints SET upvotes = upvotes + 1 WHERE id = $1", [complaintId]);
-        
-        res.json({ message: "Complaint upvoted." });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Server error" });
-    }
-});
-
-// Add a comment
-router.post("/complaints/:id/comment", authMiddleware, async (req, res) => {
-    const userId = req.user.id;
-    const complaintId = req.params.id;
-    const { description } = req.body;
-    
-    try {
-        const newComment = await pool.query(
-            "INSERT INTO comments (user_id, complaint_id, comment_text, likes_count, views_count, created_at) VALUES ($1, $2, $3, 0, 0, NOW()) RETURNING *", 
-            [userId, complaintId, description]
-        );
-        
-        await pool.query("UPDATE complaints SET total_comments = total_comments + 1 WHERE id = $1", [complaintId]);
-        res.json({ message: "Comment added.", comment: newComment.rows[0] });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Server error" });
-    }
-});
-
 // Update complaint status & upload proof image
 router.put("/complaints/:id/status", authMiddleware, roleMiddleware(["field_officer"]), upload.single("proof"), async (req, res) => {
     const fieldOfficerId = req.user.id;
     const complaintId = req.params.id;
     const { status } = req.body;
-    const proofImage = req.file ? req.file.path : null;
     
     try {
         const complaint = await pool.query("SELECT * FROM complaints WHERE id = $1", [complaintId]);
         if (!complaint.rows.length) return res.status(404).json({ error: "Complaint not found" });
         
-        // Ensure officer is assigned
-        if (complaint.rows[0].assigned_officer !== fieldOfficerId) {
+        const currentStatus = complaint.rows[0].status;
+        
+        if (complaint.rows[0].field_officer_id !== fieldOfficerId) {
             return res.status(403).json({ error: "Unauthorized" });
         }
-        
-        // If resolving, proof image is required
-        if (status === "resolved" && !proofImage) {
-            return res.status(400).json({ error: "Proof image required" });
+
+        if (currentStatus === "pending" && status !== "in_progress") {
+            return res.status(400).json({ error: "Complaint must move to 'in_progress' first." });
         }
-        
-        await pool.query(
-            "UPDATE complaints SET status = $1, proof_image = $2 WHERE id = $3", 
-            [status, proofImage, complaintId]
-        );
+        if (currentStatus === "in_progress" && status !== "resolved") {
+            return res.status(400).json({ error: "Complaint must move to 'resolved' from 'in_progress' only." });
+        }
+
+        let proofImageUrl = null;
+        if (status === "resolved" && req.file) {
+            const form = new FormData();
+            form.append("source", req.file.buffer, { filename: req.file.originalname });
+            form.append("key", process.env.FREEIMAGE_API_KEY);
+            form.append("action", "upload");
+            form.append("format", "json");
+
+            const response = await fetch("https://freeimage.host/api/1/upload", {
+                method: "POST",
+                body: form,
+                headers: form.getHeaders(),
+            });
+
+            const data = await response.json();
+            if (response.ok && data.status_code === 200) {
+                proofImageUrl = data.image.url;
+            } else {
+                return res.status(500).json({ error: "Image upload failed" });
+            }
+        }
+
+        await pool.query("UPDATE complaints SET status = $1, resolved_image = $2 WHERE id = $3", [status, proofImageUrl, complaintId]);
+
         res.json({ message: "Status updated successfully." });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Server error" });
     }
 });
+
+// Accept complaint (Assign field officer)
+router.put("/complaints/:id/accept", authMiddleware, roleMiddleware(["field_officer"]), async (req, res) => {
+    const fieldOfficerId = req.user.id;
+    const complaintId = req.params.id;
+
+    try {
+        const complaint = await pool.query("SELECT * FROM complaints WHERE id = $1", [complaintId]);
+        if (!complaint.rows.length) return res.status(404).json({ error: "Complaint not found" });
+
+        // Ensure complaint is not already assigned
+        if (complaint.rows[0].assigned_officer) {
+            return res.status(400).json({ error: "Complaint is already assigned to another field officer." });
+        }
+
+        // Assign the field officer
+        await pool.query("UPDATE complaints SET field_officer_id = $1 WHERE id = $2", [fieldOfficerId, complaintId]);
+
+        res.json({ message: "You have been assigned to this complaint." });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 
 // Fetch complaints by ward, city, or assigned officer
 router.get("/complaints", async (req, res) => {
