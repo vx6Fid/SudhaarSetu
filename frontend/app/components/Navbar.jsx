@@ -114,13 +114,13 @@ const NavLinks = ({ userRole, pathname, mobile }) => {
         <div className={`flex ${mobile ? "flex-col w-full text-center" : "items-center space-x-3"}`}>
           <NavItem href="/admin/complaints" pathname={pathname} text="Complaints" />
           {separator}
-          <NavItem href="/admin/field-officers" pathname={pathname} text="Field Officers" />
+          <NavItem href="/admin/fieldOfficer" pathname={pathname} text="Field Officers" />
           {separator}
           <NavItem href="/admin/profile" pathname={pathname} text="Profile" />
           {separator}
           <NavItem href="/admin" pathname={pathname} text="Home" />
         </div>
-      ):
+      ) :
       userRole === "call_center" ? (
         <div className={`flex ${mobile ? "flex-col w-full text-center" : "items-center space-x-3"}`}>
           <NavItem href="/call-center/complaints" pathname={pathname} text="Complaints" />

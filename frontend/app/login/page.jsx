@@ -19,7 +19,7 @@ function LoginPage() {
     setLoading(true);
 
     const loginUrl = officerRoles.has(role)
-      ? "/api/officer/login"
+      ? (role === 'admin' ? "/api/admin/login" : "/api/officer/login")
       : "/api/auth/login";
 
     try {
