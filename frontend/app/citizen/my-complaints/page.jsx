@@ -3,10 +3,12 @@ import React, { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { FiPhone, FiFileText } from "react-icons/fi";
 import { VscFeedback } from "react-icons/vsc";
+import { useRouter } from "next/navigation";
 
 const Page = () => {
   const [complaints, setComplaints] = useState([]);
-
+  const router = useRouter();
+  
   useEffect(() => {
     async function fetchComplaints() {
       try {
@@ -102,16 +104,24 @@ const Page = () => {
           </div>
         </div>
       </div>
-
+      <hr className="border-t-2 border-black" />
       <div className="flex gap-4 my-4 w-full">
+        {/* Call Button */}
         <button
           onClick={handleCall}
-          className="flex border border-black items-center gap-2 px-4 py-2 bg-orange-500 font-semibold text-black rounded-md shadow-md"
+          className="flex items-center gap-2 px-4 py-2 border border-gray-300 bg-orange-500 font-semibold text-background rounded-md shadow-md hover:bg-orange-600 transition"
         >
-          <FiPhone /> Report Via Call
+          <FiPhone />
+          Report Via Call
         </button>
-        <button className="flex border border-black items-center gap-2 px-4 py-2 bg-orange-500 font-semibold text-black rounded-md shadow-md">
-          <FiFileText /> File Complaint
+
+        {/* File Complaint Button with Link */}
+        <button
+          onClick={() => router.push("/fileComplaint")}
+          className="flex items-center gap-2 px-4 py-2 border border-gray-300 bg-orange-500 font-semibold text-background rounded-md shadow-md hover:bg-orange-600 transition"
+        >
+          <FiFileText />
+          <span>File Complaint</span>
         </button>
       </div>
 

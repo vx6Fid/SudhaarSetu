@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 function HeroCarousel() {
   const slides = [
@@ -7,6 +8,7 @@ function HeroCarousel() {
     "Track Progress Live",
     "Get Quick Resolution",
   ];
+  const router = useRouter();
 
   const [activeSlide, setActiveSlide] = useState(0);
 
@@ -35,7 +37,10 @@ function HeroCarousel() {
         Transform your community through efficient issue reporting and
         resolution
       </p>
-      <button className="mt-8 px-8 py-3 bg-[#F5F1E3] text-[#090909] rounded-[15px] font-bold">
+      <button
+        onClick={() => router.push("/fileComplaint")}
+        className="mt-8 px-8 py-3 bg-[#F5F1E3] text-[#090909] rounded-[15px] font-bold"
+      >
         Report Now!
       </button>
       <div className="absolute bottom-8 right-8 flex gap-2">

@@ -66,6 +66,32 @@ function PendingCases() {
     setSelectedComplaint(null);
   };
 
+  const acceptComplaint = async (id) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaints/${id}/accept`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to accept complaint");
+      }
+
+      setPendingComplaints((prev) =>
+        prev.filter((complaint) => complaint.id !== id)
+      );
+    } catch (error) {
+      console.error("Error accepting complaint:", error);
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto p-6">
       <h2 className="text-3xl font-bold text-primary mb-6">
@@ -157,58 +183,19 @@ function PendingCases() {
                       {complaint.total_comments} Comments
                     </span>
                   </button>
-                  <span
-                    className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                      complaint.status === "pending"
-                        ? "bg-red-100 text-red-600"
-                        : "bg-orange-100 text-orange-600"
-                    }`}
-                  >
-                    {complaint.status === "pending" ? "Pending" : "In Progress"}
+                  <span className="text-xs font-semibold px-3 py-1 rounded-full bg-red-100 text-red-600">
+                    Pending
                   </span>
                 </div>
-                <button className="bg-green-300 border border-green-400 font-medium px-3 py-1 rounded-md hover:bg-green-400 transition text-xs shadow">
+                <button
+                  className="bg-green-500 border border-green-600 font-medium px-3 py-1 rounded-md hover:bg-green-600 transition text-xs shadow text-white"
+                  onClick={() => acceptComplaint(complaint.id)}
+                >
                   Accept
                 </button>
               </div>
             </div>
           ))}
-        </div>
-      )}
-
-      {selectedComplaint && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4 z-50">
-          <div className="bg-white w-full max-w-lg p-6 rounded-lg shadow-lg relative">
-            <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
-              onClick={closeCommentsModal}
-            >
-              <CloseIcon className="w-6 h-6" />
-            </button>
-            <h3 className="text-xl font-semibold text-text mb-4">
-              Comments for {selectedComplaint.category}
-            </h3>
-            <div className="max-h-60 overflow-y-auto space-y-3">
-              {selectedComplaint.comments ? (
-                selectedComplaint.comments
-                  .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                  .map((comment, index) => (
-                    <div
-                      key={index}
-                      className="p-3 border border-gray-200 rounded-lg bg-gray-50"
-                    >
-                      <p className="text-sm font-semibold">{comment.user}</p>
-                      <p className="text-xs text-gray-700">
-                        {new Date(comment.timestamp).toLocaleString()}
-                      </p>
-                      <p className="text-sm">{comment.text}</p>
-                    </div>
-                  ))
-              ) : (
-                <p className="text-gray-500 text-sm">No comments available</p>
-              )}
-            </div>
-          </div>
         </div>
       )}
     </div>
