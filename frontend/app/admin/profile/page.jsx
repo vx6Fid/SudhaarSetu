@@ -11,7 +11,7 @@ function Page() {
       try {
         let url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user`);
         url.searchParams.append("user_id", localStorage.getItem("userId"));
-        url.searchParams.append("role", "admin"); // Updated role to "admin"
+        url.searchParams.append("role", "admin");
         const response = await fetch(url);
         const data = await response.json();
         setAdminDetails(data.user);

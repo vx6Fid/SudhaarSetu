@@ -90,46 +90,35 @@ const NavLinks = ({ userRole, pathname, mobile }) => {
     <>
       {userRole === "citizen" ? (
         <div className={`flex ${mobile ? "flex-col w-full text-center" : "items-center space-x-3"}`}>
+          <NavItem href="/citizen" pathname={pathname} text="Home" />
+          {separator}
           <NavItem href="/citizen/track" pathname={pathname} text="Track" />
           {separator}
           <NavItem href="/citizen/my-complaints" pathname={pathname} text="My Complaints" />
           {separator}
           <NavItem href="/citizen/profile" pathname={pathname} text="Profile" />
-          {separator}
-          <NavItem href="/citizen" pathname={pathname} text="Home" />
         </div>
       ):
       userRole === "field_officer" ? (
         <div className={`flex ${mobile ? "flex-col w-full text-center" : "items-center space-x-3"}`}>
+          <NavItem href="/field-officer" pathname={pathname} text="Home" />
+          {separator}
           <NavItem href="/field-officer/closed-cases" pathname={pathname} text="Closed Cases" />
           {separator}
           <NavItem href="/field-officer/pending-cases" pathname={pathname} text="Pending Cases" />
           {separator}
           <NavItem href="/field-officer/profile" pathname={pathname} text="Profile" />
-          {separator}
-          <NavItem href="/field-officer" pathname={pathname} text="Home" />
         </div>
       ):
       userRole === "admin" ? (
         <div className={`flex ${mobile ? "flex-col w-full text-center" : "items-center space-x-3"}`}>
-          <NavItem href="/admin/complaints" pathname={pathname} text="Complaints" />
+          <NavItem href="/admin" pathname={pathname} text="Home" />
           {separator}
           <NavItem href="/admin/fieldOfficer" pathname={pathname} text="Field Officers" />
           {separator}
           <NavItem href="/admin/profile" pathname={pathname} text="Profile" />
-          {separator}
-          <NavItem href="/admin" pathname={pathname} text="Home" />
         </div>
       ) :
-      userRole === "call_center" ? (
-        <div className={`flex ${mobile ? "flex-col w-full text-center" : "items-center space-x-3"}`}>
-          <NavItem href="/call-center/complaints" pathname={pathname} text="Complaints" />
-          {separator}
-          <NavItem href="/call-center/profile" pathname={pathname} text="Profile" />
-          {separator}
-          <NavItem href="/call-center" pathname={pathname} text="Home" />
-        </div>
-      ):
       (
         <div className={`flex ${mobile ? "flex-col w-full text-center" : "items-center space-x-3"}`}>
           <NavItem href="/signup" pathname={pathname} text="Sign Up" />

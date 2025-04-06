@@ -38,13 +38,14 @@ function LoginPage() {
       }
 
       const data = await response.json();
-      const userData = role === "citizen" ? data.user : data.officer;
+      const userData = role === "citizen" ? data.user : (role=="admin" ? data.admin : data.officer);
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("userRole", role);
       localStorage.setItem("userId", userData?.id || "");
       localStorage.setItem("user-name", userData?.name || "");
       localStorage.setItem("user-ward", userData?.ward || "");
+      localStorage.setItem('user-city', userData.city || "");
 
       // Redirect user based on role
       const roleRedirects = {

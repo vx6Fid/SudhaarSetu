@@ -88,7 +88,7 @@ function SignupPage() {
             <input
               type="text"
               className="w-full px-4 py-3 border border-gray-500 rounded-md bg-background outline-none text-gray-700"
-              placeholder="9876543219"
+              placeholder="+91 9999999999"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
@@ -103,7 +103,7 @@ function SignupPage() {
             <input
               type="text"
               className="w-full px-4 py-3 border border-gray-500 rounded-md bg-background outline-none text-gray-700"
-              placeholder="+91 9999999999"
+              placeholder="id@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

@@ -66,33 +66,6 @@ router.post("/officer/login", async (req, res) => {
     }
 });
 
-// Profile Update (Admin, Field Officer, Call Center)
-router.put("/officer/profile/update", authMiddleware, async (req, res) => {
-    const { name, phone, address } = req.body;
-    const userId = req.user.id;
-    const userRole = req.user.role;
-
-    let tableName;
-    if (userRole === "admin") tableName = "admins";
-    else tableName = "officers";
-
-    try {
-        const updatedUser = await pool.query(
-            `UPDATE ${tableName} SET name = $1, phone = $2, address = $3 WHERE id = $4 RETURNING *`,
-            [name, phone, address, userId]
-        );
-
-        if (updatedUser.rowCount === 0) {
-            return res.status(404).json({ error: "User not found" });
-        }
-
-        res.json({ message: "Profile updated successfully", user: updatedUser.rows[0] });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Server error" });
-    }
-});
-
 // Admin Removing a Field Officer or Call Center Staff
 router.delete("/admin/remove-user/:id", authMiddleware, roleMiddleware(["admin"]), async (req, res) => {
     const { id } = req.params;
@@ -144,7 +117,7 @@ router.post("/admin/create-user", authMiddleware, roleMiddleware(["admin"]), asy
 });  
 
 router.post("/admin/assign-field-officer", async (req, res) => {
-    const { admin_id, complaint_id, field_officer_id } = req.body;
+    const { admin_id, complaint_id, field_officer_id, officerName } = req.body;
 
     // Validate required fields
     if (!admin_id || !complaint_id || !field_officer_id) {
@@ -178,11 +151,11 @@ router.post("/admin/assign-field-officer", async (req, res) => {
         // Assign the field officer to the complaint
         const updateQuery = `
             UPDATE complaints 
-            SET field_officer_id = $1
-            WHERE id = $2 
+            SET field_officer_id = $1, officer_name = $2
+            WHERE id = $3 
             RETURNING id, field_officer_id
         `;
-        const result = await pool.query(updateQuery, [field_officer_id, complaint_id]);
+        const result = await pool.query(updateQuery, [field_officer_id, officerName, complaint_id]);
 
         res.json({ message: "Field officer assigned successfully", complaint: result.rows[0] });
 
@@ -192,5 +165,26 @@ router.post("/admin/assign-field-officer", async (req, res) => {
     }
 });
 
+// Fetching Field Officers
+router.get('/officers', async (req, res) => {
+    try {
+      const result = await pool.query("SELECT * FROM officers;");
+      
+      // Return only the rows
+      return res.status(200).json({
+        success: true,
+        count: result.rowCount,
+        officers: result.rows,
+      });
+  
+    } catch (error) {
+      console.error("Error fetching officers:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Server error while fetching officers.",
+      });
+    }
+  });
+  
 
 module.exports = router;

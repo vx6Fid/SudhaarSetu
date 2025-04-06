@@ -46,9 +46,7 @@ const EditProfile = () => {
         url.searchParams.append("user_id", user.user_id);
         url.searchParams.append(
           "role",
-          user.role === "field_officer" || user.role === "call_center"
-            ? "officer"
-            : "citizen"
+          user.role === "field_officer" ? "officer" : user.role
         );
 
         const response = await fetch(url, { method: "GET" });
@@ -106,14 +104,13 @@ const EditProfile = () => {
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-red-500">Error: {error.message}</p>;
 
-  // Check if user is a citizen
-  const isCitizen = user.role === "citizen";
+  const isCitizen = user.role==='citizen';
 
   return (
     <div>
       <div className="mx-2 relative bg-secondary h-36 flex items-center rounded-lg px-2 my-2 justify-center">
         <button className="absolute left-4 top-4 text-white">
-          <Link href="/citizen/profile">
+          <Link href={"/" + user.role + "/profile"}>
             <FiArrowLeft size={24} />
           </Link>
         </button>
@@ -192,7 +189,7 @@ const EditProfile = () => {
           </div>
 
           {/* Ward (Disabled if not a citizen) */}
-          <div>
+          {user.role!=="admin" && (<div>
             <label className="block text-gray-700 font-medium">Ward</label>
             <input
               type="text"
@@ -204,7 +201,7 @@ const EditProfile = () => {
                 !isCitizen ? "bg-gray-200 text-gray-600 cursor-not-allowed" : ""
               }`}
             />
-          </div>
+          </div>)}
 
           <button
             type="submit"

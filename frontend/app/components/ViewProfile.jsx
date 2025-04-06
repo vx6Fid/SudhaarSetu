@@ -61,9 +61,11 @@ function ViewProfile({ userDet }) {
         <p className="flex space-x-2">
           <strong>City:</strong> <span>{userDet.city || "N/A"}</span>
         </p>
-        <p className="flex space-x-2">
-          <strong>Ward Number:</strong> <span>{userDet.ward || "N/A"}</span>
-        </p>
+        {userDet.ward && (
+          <p className="flex space-x-2">
+            <strong>Ward Number:</strong> <span>{userDet.ward || "N/A"}</span>
+          </p>
+        )}
       </div>
 
       {/* ✅ Account Information Section */}

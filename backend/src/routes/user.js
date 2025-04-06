@@ -11,7 +11,7 @@ router.get("/user", async (req, res) => {
         return res.status(400).json({ error: "user_id and role are required" });
     }
     
-    let table = role === "citizen" ? "users" : role === "officer" ? "officers" : null;
+    let table = role === "citizen" ? "users" : (role === "officer" ? "officers" : "admins");
     if (!table) {
         return res.status(400).json({ error: "Invalid role" });
     }
@@ -40,13 +40,13 @@ router.put("/update-user", async (req, res) => {
     }
 
     // Validate role
-    const validRoles = ["citizen", "officer", "field_officer"];
+    const validRoles = ["citizen", "admin", "field_officer"];
     if (!validRoles.includes(role)) {
         return res.status(400).json({ error: "Invalid role" });
     }
 
     // Select the correct table
-    const table = role === "citizen" ? "users" : "officers";
+    const table = role === "citizen" ? "users" :( role ==="admin" ? "admins" : "officers");
 
     // Prepare updates dynamically
     let updates = [];
