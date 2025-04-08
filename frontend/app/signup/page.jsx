@@ -32,13 +32,13 @@ function SignupPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Signup failed");
+        throw new Error(data.message || data.error || "Signup failed");
       }
 
       // Redirect to login after successful signup
       window.location.href = "/login";
     } catch (err) {
-      setError("Failed to signup: " + err.message);
+      setError("Failed!, " + err.message);
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ function SignupPage() {
         </p>
 
         {/* Error Message */}
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
         {/* Form */}
         <form onSubmit={handleSignup} className="space-y-4">

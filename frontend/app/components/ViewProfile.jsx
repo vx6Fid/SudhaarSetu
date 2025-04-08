@@ -13,12 +13,13 @@ function ViewProfile({ userDet }) {
     localStorage.removeItem("token");
     window.location.href = "/login";
   };
+  const role = localStorage.getItem('userRole');
   return (
     <div className="min-h-screen bg-background text-gray-800 w-full verflow-hidden">
       {/* Header Section */}
       <div className="mx-2 relative bg-secondary h-36 flex items-center rounded-lg px-2 mt-2 justify-center">
         <button className="absolute left-4 top-4 text-white">
-          <Link href="/citizen">
+          <Link href={role=='admin' ? '/admin' : (role=='citizen' ? '/citizen' : '/field-officer')}>
             <FiArrowLeft size={24} />
           </Link>
         </button>

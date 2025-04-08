@@ -1,73 +1,96 @@
 "use client";
-
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay } from "swiper/modules";
+import { EffectCoverflow, Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
+import "swiper/css/effect-coverflow";
 import "swiper/css/pagination";
-import "swiper/css/navigation";
 
 const keyFeatures = [
   {
     title: "One-Click Complaint Filing",
-    description: "Easily report municipal issues with just a few clicks. Our user-friendly platform eliminates unnecessary steps, making it effortless for citizens to submit complaints about public infrastructure, sanitation, and more."
+    description: "Easily report municipal issues with just a few clicks. Our user-friendly platform eliminates unnecessary steps.",
+    icon: "📱",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200"
   },
   {
-    title: "Image & Location-Based Reports",
-    description: "Enhance complaint accuracy by attaching real-time images and automatic GPS location data. This ensures authorities receive precise details, helping them quickly locate and address the issue."
+    title: "Image & Location Reports",
+    description: "Enhance accuracy with real-time images and GPS data for precise issue location.",
+    icon: "📍",
+    bgColor: "bg-green-50",
+    borderColor: "border-green-200"
   },
   {
-    title: "Upvote System for Prioritization",
-    description: "Complaints with the most upvotes receive higher priority, ensuring that urgent or widespread issues get resolved faster. Citizens can support existing complaints to push them up in the queue."
+    title: "Upvote Prioritization",
+    description: "Higher votes = higher priority. Push important issues to the top.",
+    icon: "👍",
+    bgColor: "bg-purple-50",
+    borderColor: "border-purple-200"
   },
   {
-    title: "Automated Complaint Assignment",
-    description: "No need to manually assign complaints. Our intelligent system automatically distributes complaints to the relevant field officers based on location, workload, and priority."
+    title: "Automated Assignment",
+    description: "Intelligent system distributes complaints to relevant officers automatically.",
+    icon: "🤖",
+    bgColor: "bg-yellow-50",
+    borderColor: "border-yellow-200"
   },
   {
-    title: "Real-Time Status Tracking",
-    description: "Stay updated with live tracking. Know whether your complaint is 'Pending,' 'In Progress,' or 'Resolved' at any given moment, eliminating uncertainty and improving transparency."
+    title: "Real-Time Tracking",
+    description: "Live updates on complaint status from 'Pending' to 'Resolved'.",
+    icon: "⏱️",
+    bgColor: "bg-red-50",
+    borderColor: "border-red-200"
   },
   {
-    title: "Interactive Swipe-Based Browsing",
-    description: "Browse through municipal complaints effortlessly with a modern swipe-based interface. Easily view, upvote, or report issues in a Tinder-style card format."
-  },
-  {
-    title: "Dedicated Field Officer Dashboard",
-    description: "Field officers have a structured dashboard where they can view assigned complaints, mark progress, and update resolutions in real-time, making issue resolution more efficient."
-  },
-  {
-    title: "Powerful Admin Control Panel",
-    description: "Admins have full control to monitor complaints, assign field officers, manage users, and generate reports to analyze trends and system efficiency."
-  },
-  {
-    title: "Feedback & Rating System",
-    description: "Once an issue is resolved, users can provide feedback and rate the effectiveness of the response, helping improve municipal services over time."
-  },
+    title: "Swipe-Based Browsing",
+    description: "Tinder-style interface for effortless complaint browsing.",
+    icon: "💫",
+    bgColor: "bg-indigo-50",
+    borderColor: "border-indigo-200"
+  }
 ];
 
 const KeyFeaturesCarousel = () => {
   return (
-    <div className="max-w-6xl mx-auto px-6 py-2">
-      {/* Swiper Carousel */}
-      <div className="relative">
+    <div className="max-w-7xl mx-auto px-4 py-16">
+      <div className="text-center mb-16">
+        <h2 className="text-4xl font-bold text-gray-900 mb-4">Key Features</h2>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          Innovative solutions for efficient municipal issue resolution
+        </p>
+      </div>
+
+      <div className="relative h-[500px]">
         <Swiper
-          modules={[Pagination, Autoplay]}
-          spaceBetween={30}
-          slidesPerView={1}
-          pagination={{ clickable: true }}
-          autoplay={{ delay: 3500 }}
-          breakpoints={{
-            640: { slidesPerView: 1 },
-            768: { slidesPerView: 2 },
-            1024: { slidesPerView: 3 }
+          effect={"coverflow"}
+          grabCursor={true}
+          centeredSlides={true}
+          slidesPerView={"auto"}
+          coverflowEffect={{
+            rotate: 10,
+            stretch: 0,
+            depth: 200,
+            modifier: 2.5,
+            slideShadows: true,
           }}
-          className="px-4"
+          pagination={{
+            clickable: true,
+            dynamicBullets: true,
+          }}
+          modules={[EffectCoverflow, Pagination, Autoplay]}
+          autoplay={{
+            delay: 3000,
+            disableOnInteraction: false,
+          }}
+          className="h-full w-full"
         >
           {keyFeatures.map((feature, index) => (
-            <SwiperSlide key={index}>
-              <div className="bg-white border border-gray-300 shadow-xl rounded-xl px-6 min-h-[260px] flex flex-col justify-center transition-all transform hover:scale-105 hover:shadow-2xl">
-                <h3 className="text-xl font-semibold text-primary mb-3">{feature.title}</h3>
-                <p className="text-gray-700">{feature.description}</p>
+            <SwiperSlide key={index} className="!w-[300px] !h-[400px]">
+              <div className={`h-full rounded-2xl p-8 flex flex-col border-2 ${feature.borderColor} ${feature.bgColor} shadow-xl transition-all duration-300 hover:shadow-2xl`}>
+                <div className="text-5xl mb-6">{feature.icon}</div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">{feature.title}</h3>
+                <p className="text-gray-700 flex-grow">{feature.description}</p>
+                <div className="mt-6 h-1 w-20 rounded-full bg-gray-300"></div>
               </div>
             </SwiperSlide>
           ))}

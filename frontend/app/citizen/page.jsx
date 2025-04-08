@@ -11,7 +11,7 @@ function Page() {
   const [complaints, setComplaints] = useState([]);
 
   const categories = ["Road Repair", "Water Supply", "Garbage Collection", "Pothole"];
-  const wards = ["Ward 1", "Ward 2", "Ward 3"];
+  const wards = ["Ward 1", "Ward 2", "Ward 3", "Ward 16", "Ward 17"];
 
   useEffect(() => {
     async function fetchComplaints() {
@@ -105,7 +105,7 @@ function Page() {
 
       {/* Display Complaint Cards */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {complaints.length > 0 ? (
+        {complaints && complaints.length > 0 ? (
           complaints.map((complaint) => <ComplainCard key={complaint.id} complaint={complaint} />)
         ) : (
           <p className="text-gray-500">No complaints found.</p>
