@@ -135,7 +135,7 @@ router.put(
   async (req, res) => {
     const fieldOfficerId = req.user.id;
     const complaintId = req.params.id;
-    const officer_name = req.user.name;
+    const officer_name = req.body.user_name;
 
     try {
       const complaint = await pool.query(

@@ -1,11 +1,13 @@
-"use client"; // Ensures client-side hooks work
-
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
 import { Geist, Geist_Mono } from "next/font/google";
-import Navbar from '../app/components/Navbar'; // Ensure Navbar component exists
 import "./globals.css";
+import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import { Toaster } from "react-hot-toast";
+
+export const metadata = {
+  title: "SudhaarSetu",
+  description: "A platform to report and resolve local civic issues.",
+};
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,25 +20,15 @@ const geistMono = Geist_Mono({
 });
 
 export default function RootLayout({ children }) {
-  const [userRole, setUserRole] = useState(null);
-  const pathname = usePathname(); // App Router uses usePathname
-
-  useEffect(() => {
-    const role = localStorage.getItem("userRole");
-    setUserRole(role);
-  }, [pathname]);
-
-  const hideLayoutForPaths = ["/login", "/signup"];
-  const shouldHideLayout = hideLayoutForPaths.includes(pathname);
-
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {!shouldHideLayout && <Navbar userRole={userRole} />}
+        <Toaster position="top-right" />
+        <Navbar />
         <main>{children}</main>
-        {!shouldHideLayout && <Footer />}
+        <Footer />
       </body>
     </html>
   );

@@ -1,14 +1,20 @@
-"use client"; // 👈 Ensures this is a client-side component
+"use client";
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FiMenu, FiX } from "react-icons/fi";
 
-const Navbar = ({ userRole }) => {
+const Navbar = () => {
   const pathname = usePathname() || "";
+  const [userRole, setUserRole] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    const role = localStorage.getItem("userRole");
+    setUserRole(role);
+  }, [pathname])
 
   useEffect(() => {
     const handleOutsideClick = (event) => {

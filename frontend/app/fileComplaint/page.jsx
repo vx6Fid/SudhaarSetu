@@ -180,7 +180,7 @@ export default function FileComplaint() {
           <MapContainer
             center={[20.5937, 78.9629]}
             zoom={5}
-            className="h-64 w-full rounded-md"
+            className="h-64 w-full z-0 rounded"
           >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <LocationMarker />

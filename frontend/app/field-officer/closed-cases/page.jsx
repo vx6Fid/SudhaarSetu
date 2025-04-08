@@ -102,7 +102,8 @@ function ClosedCases() {
                 </button>
               </div>
 
-              <div className="w-full h-60 mt-3 border border-gray-400 rounded-lg overflow-hidden">
+              <div className="w-full h-60 mt-3 border border-gray-400 rounded-lg overflow-hidden relative">
+                {/* Before Image or Map - Base Layer */}
                 {viewMode[complaint.id] !== "map" ? (
                   complaint.image ? (
                     <Image
@@ -110,23 +111,23 @@ function ClosedCases() {
                       alt="Before Image"
                       width={600}
                       height={240}
-                      className="w-full h-full object-cover rounded"
+                      className="w-full h-full object-cover"
                       loading="lazy"
                     />
                   ) : (
-                    <p className="text-gray-500 flex items-center justify-center h-full">
+                    <div className="w-full h-full flex items-center justify-center text-gray-500">
                       Before Image Not Available
-                    </p>
+                    </div>
                   )
                 ) : complaint.location ? (
                   <MapContainer
                     center={complaint.location.split(",").map(Number)}
                     zoom={15}
                     scrollWheelZoom={false}
-                    className="w-full h-full z-0 rounded"
+                    className="w-full h-full z-0"
                   >
                     <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      attribution="&copy; OpenStreetMap contributors"
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     <Marker
@@ -137,30 +138,30 @@ function ClosedCases() {
                     </Marker>
                   </MapContainer>
                 ) : (
-                  <p className="text-gray-500 flex items-center justify-center h-full">
+                  <div className="w-full h-full flex items-center justify-center text-gray-500">
                     Invalid location data
-                  </p>
+                  </div>
+                )}
+
+                {/* Resolved Image - Overlay Layer */}
+                {showResolved[complaint.id] && complaint.resolved_image && (
+                  <Image
+                    src={complaint.resolved_image}
+                    alt="Resolved Image"
+                    width={600}
+                    height={240}
+                    className="absolute top-0 left-0 w-full h-full object-cover z-10 rounded"
+                    loading="lazy"
+                  />
+                )}
+
+                {/* Optional: fallback text if resolved image not available */}
+                {showResolved[complaint.id] && !complaint.resolved_image && (
+                  <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-white bg-opacity-70 z-10 rounded text-gray-500">
+                    Resolved Image Not Available
+                  </div>
                 )}
               </div>
-
-              {showResolved[complaint.id] && (
-                <div className="w-full h-60 mt-3 border border-gray-400 rounded-lg overflow-hidden">
-                  {complaint.resolve_image ? (
-                    <Image
-                      src={complaint.resolve_image}
-                      alt="Resolved Image"
-                      width={600}
-                      height={240}
-                      className="w-full h-full object-cover rounded"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <p className="text-gray-500 flex items-center justify-center h-full">
-                      Resolved Image Not Available
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
           ))}
         </div>

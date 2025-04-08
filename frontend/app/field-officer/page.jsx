@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
+import { toast } from "react-hot-toast";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import {
@@ -11,12 +12,33 @@ import {
   Image as ImageIcon,
   X as CloseIcon,
 } from "lucide-react";
+import StatusUpdateModal from "../components/StatusUpdateModaal";
 
 function OfficerComplaints() {
   const [complaints, setComplaints] = useState([]);
   const [viewMode, setViewMode] = useState({});
+  const [modalOpen, setModalOpen] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [loadingStatusId, setLoadingStatusId] = useState(null);
 
+  const handleStatusClick = (id, status) => {
+    const nextStatus = status === "in_progress" ? "resolved" : "in_progress";
+    if (nextStatus === "resolved") {
+      setSelectedComplaint({ id, nextStatus });
+      setModalOpen(true);
+    } else {
+      updateComplaintStatus(id, nextStatus); // Direct update for in_progress
+    }
+  };
+
+  const handleConfirmUpload = (file) => {
+    if (!selectedComplaint) return;
+    updateComplaintStatus(
+      selectedComplaint.id,
+      selectedComplaint.nextStatus,
+      file
+    );
+  };
   // Memoized pin icon
   const pinIcon = useMemo(
     () =>
@@ -48,6 +70,7 @@ function OfficerComplaints() {
         setComplaints(filteredComplaints);
       } catch (error) {
         console.error("Error fetching complaints:", error);
+        toast.error("Error fetching complaints");
       }
     }
     fetchComplaints();
@@ -57,15 +80,52 @@ function OfficerComplaints() {
     setViewMode((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Open modal for comments
-  const openCommentsModal = (complaint) => {
-    setSelectedComplaint(complaint);
-  };
+  async function updateComplaintStatus(id, nextStatus, file) {
+    setLoadingStatusId(id);
+    const formData = new FormData();
+    formData.append("status", nextStatus);
+    if (file) formData.append("proof", file);
 
-  // Close modal
-  const closeCommentsModal = () => {
-    setSelectedComplaint(null);
-  };
+    try {
+      const token = localStorage.getItem("token"); // Assuming you store auth token in localStorage
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaints/${id}/status`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok) {
+        toast.success("Status updated successfully");
+        window.location.reload(); // Refresh complaints
+        setLoadingStatusId(null);
+      } else {
+        toast.error(data.error || "Failed to update status");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("Server error. Please try again.");
+    } finally {
+      setLoadingStatusId(null)
+    }
+  }
+
+  // Get the button text to change the status of complaint
+  function getNextStatusLabel(currentStatus) {
+    switch (currentStatus) {
+      case "pending":
+        return "Mark as In Progress";
+      case "in_progress":
+        return "Mark as Resolved";
+      default:
+        return null;
+    }
+  }
 
   return (
     <div className="max-w-5xl mx-auto p-6">
@@ -151,15 +211,11 @@ function OfficerComplaints() {
                     <ThumbsUp className="w-4 h-4 text-gray-600" />
                     <span className="font-medium">{complaint.upvotes}</span>
                   </div>
-                  <button
-                    onClick={() => openCommentsModal(complaint)}
-                    className="flex items-center gap-1 text-blue-600 hover:underline"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span className="font-medium">
-                      {complaint.total_comments} Comments
-                    </span>
-                  </button>
+
+                  <MessageCircle className="w-4 h-4" />
+                  <span className="font-medium">
+                    {complaint.total_comments}
+                  </span>
                   <span
                     className={`text-xs font-semibold border border-black  px-3 py-1 rounded-full ${
                       complaint.status === "pending"
@@ -170,52 +226,28 @@ function OfficerComplaints() {
                     {complaint.status === "pending" ? "Pending" : "Ongoing"}
                   </span>
                 </div>
-                <button className="bg-green-300 border border-green-400 font-medium px-3 py-1 rounded-md hover:bg-green-400 transition text-xs shadow">
-                  Change Status
+                <button
+                  className="bg-green-300 border border-green-400 font-medium px-3 py-1 rounded-md hover:bg-green-400 transition text-xs shadow"
+                  onClick={() =>
+                    handleStatusClick(complaint.id, complaint.status)
+                  }
+                >
+                  {loadingStatusId === complaint.id ? (
+                    <span className="animate-spin">🌀</span>
+                  ) : (
+                    getNextStatusLabel(complaint.status)
+                  )}
                 </button>
               </div>
             </div>
           ))}
         </div>
       )}
-
-      {/* Comments Modal */}
-      {selectedComplaint && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="bg-white w-full max-w-lg p-6 rounded-lg shadow-lg relative">
-            <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
-              onClick={closeCommentsModal}
-            >
-              <CloseIcon className="w-6 h-6" />
-            </button>
-            <h3 className="text-xl font-semibold text-text mb-4">
-              Comments for {selectedComplaint.category}
-            </h3>
-
-            <div className="max-h-60 overflow-y-auto space-y-3">
-              {selectedComplaint.comments ? (
-                selectedComplaint.comments
-                  .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)) // Sort by time (latest first)
-                  .map((comment, index) => (
-                    <div
-                      key={index}
-                      className="p-3 border border-gray-200 rounded-lg bg-gray-50"
-                    >
-                      <p className="text-sm font-semibold">{comment.user}</p>
-                      <p className="text-xs text-gray-700">
-                        {new Date(comment.timestamp).toLocaleString()}
-                      </p>
-                      <p className="text-sm">{comment.text}</p>
-                    </div>
-                  ))
-              ) : (
-                <p className="text-gray-500 text-sm">No comments available</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <StatusUpdateModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={handleConfirmUpload}
+      />
     </div>
   );
 }
