@@ -31,7 +31,7 @@ const Navbar = () => {
   }, [menuOpen]);
 
   return (
-    <div className="mx-1 my-1 h-20">
+    <div className="mx-1 h-20">
       <nav className="bg-background border border-black w-full fixed top-0 left-0 z-50">
         <div className="flex justify-between items-center max-w-6xl mx-auto p-4">
           {/* Logo */}

@@ -14,23 +14,51 @@ body {
   @apply bg-background
 }
 
-@keyframes gentleFloat {
-  0%, 100% {
-    transform: translate(0, 0);
+@keyframes float {
+  0% {
+    transform: translateY(0px) translateX(0px);
   }
   50% {
-    transform: translate(10px, -15px);
+    transform: translateY(-20px) translateX(10px);
+  }
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+}
+
+@keyframes float2 {
+  0% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(15px) translateX(-15px);
+  }
+  100% {
+    transform: translateY(0px) translateX(0px);
+  }
+}
+
+@keyframes float3 {
+  0% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) translateX(5px) rotate(5deg);
+  }
+  100% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
   }
 }
 
 .floating-element {
-  animation: gentleFloat 8s ease-in-out infinite;
+  animation: float 8s ease-in-out infinite;
 }
 
 .floating-element-2 {
-  animation: gentleFloat 10s ease-in-out infinite 2s;
+  animation: float2 12s ease-in-out infinite;
 }
 
 .floating-element-3 {
-  animation: gentleFloat 12s ease-in-out infinite 4s;
+  animation: float3 10s ease-in-out infinite;
 }
+

@@ -8,7 +8,7 @@ export default function Home() {
       <HeroCarousel />
 
       {/* How SudhaarSetu Works*/}
-      <div className="px-4 py-20 md:py-28 bg-gradient-to-br from-gray-50 to-background relative overflow-hidden mt-10">
+      <div className="px-4 py-20 md:py-28 bg-gradient-to-br from-gray-50 to-background relative overflow-hidden">
         {/* Decorative background elements */}
         <div className="absolute top-0 left-0 w-full h-full opacity-10">
           <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-primary/30 blur-3xl"></div>
@@ -103,8 +103,8 @@ export default function Home() {
                     Smart Routing
                   </h3>
                   <p className="text-gray-600 text-center">
-                    Our AI-powered system instantly assigns your complaint to
-                    the right department with real-time tracking updates.
+                    Our system instantly assigns your complaint to the right
+                    department with real-time tracking updates.
                   </p>
                 </div>
               </div>
@@ -244,14 +244,13 @@ export default function Home() {
       </div>
 
       {/* Key Features Section */}
-      {/* Key Features Section */}
       <div className="bg-[#f3e8dc] relative overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           {/* Animated circles */}
-          <div className="floating-element absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-[#f8d7b6] opacity-50"></div>
-          <div className="floating-element-2 absolute top-2/3 right-1/4 w-40 h-40 rounded-full bg-[#f8d7b6] opacity-30"></div>
-          <div className="floating-element-3 absolute bottom-1/4 right-1/3 w-24 h-24 rounded-full bg-[#f8d7b6] opacity-40"></div>
+          <div className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full bg-[#f8d7b6] opacity-50 animate-[float_8s_ease-in-out_infinite]"></div>
+          <div className="absolute top-2/3 right-1/4 w-40 h-40 rounded-full bg-[#f8d7b6] opacity-30 animate-[float_12s_ease-in-out_infinite]"></div>
+          <div className="absolute bottom-1/4 right-1/3 w-24 h-24 rounded-full bg-[#f8d7b6] opacity-40 animate-[float_10s_ease-in-out_infinite]"></div>
         </div>
 
         {/* Content */}
