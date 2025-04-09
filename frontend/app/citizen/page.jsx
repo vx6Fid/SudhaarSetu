@@ -1,17 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import {
-  FiX,
-  FiSearch,
-  FiBell,
-  FiChevronDown,
-  FiInbox,
-  FiFilter,
-} from "react-icons/fi";
-import ComplainCard from "../components/ComplainCard";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
+import { FiX, FiSearch } from "react-icons/fi";
+import dynamic from "next/dynamic";
+
+const ComplainCard = dynamic(() => import("../components/ComplainCard"), {
+  ssr: false,
+});
 
 function Page() {
   const [showBanner, setShowBanner] = useState(true);
@@ -19,6 +13,7 @@ function Page() {
   const [selectedWard, setSelectedWard] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [complaints, setComplaints] = useState([]);
+  const [userName, setUserName] = useState("");
 
   const categories = [
     "Road Repair",
@@ -29,52 +24,38 @@ function Page() {
   const wards = ["Ward 1", "Ward 2", "Ward 3", "Ward 16", "Ward 17"];
 
   useEffect(() => {
-    async function fetchComplaints() {
-      try {
-        const city = localStorage.getItem("user-city");
-        let url = new URL(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaints`
-        );
-
-        if (city) url.searchParams.append("city", city);
-        if (selectedWard) url.searchParams.append("ward", selectedWard);
-        if (selectedCategory)
-          url.searchParams.append("category", selectedCategory);
-
-        // If search query is a number, treat it as complaint_id
-        if (searchQuery && !isNaN(searchQuery)) {
-          url.searchParams.append("complaint_id", searchQuery);
-        }
-
-        const response = await fetch(url);
-        const data = await response.json();
-        setComplaints(data.complaints);
-      } catch (error) {
-        console.error("Error fetching complaints:", error);
-      }
+    
+    const city = localStorage.getItem("user-city");
+    const name = localStorage.getItem("user-name") || "Citizen";
+    setUserName(name.split(" ")[0]);
+  
+    let url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaints`);
+    if (city) url.searchParams.append("city", city);
+    if (selectedWard) url.searchParams.append("ward", selectedWard);
+    if (selectedCategory) url.searchParams.append("category", selectedCategory);
+    if (searchQuery && !isNaN(searchQuery)) {
+      url.searchParams.append("complaint_id", searchQuery);
     }
-
-    fetchComplaints();
-  }, [selectedCategory, selectedWard, searchQuery]); // ✅ Fetch when filters or search query change
-
+  
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => setComplaints(data.complaints))
+      .catch((error) => console.error("Error fetching complaints:", error));
+  }, [selectedCategory, selectedWard, searchQuery]);
+  
   return (
     <div className="p-6 min-h-screen ">
       {/* ✅ Green Banner (Dismissable) - Fixed duplicate structure */}
       {showBanner && (
-        <div className="flex items-center justify-between bg-emerald-50 border border-secondary text-primary p-4 rounded-xl mb-8 shadow-sm backdrop-blur-sm bg-opacity-60">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-full bg-emerald-100">
-              <FiBell className="text-primary" />
-            </div>
-            <div>
-              <p className="font-semibold">
-                Welcome back, {localStorage.getItem("user-name")?.split(" ")[0]}
-                !
-              </p>
-              <p className="text-sm text-primary">
-                Track your complaints and view updates in real-time
-              </p>
-            </div>
+        <div className="flex bg-secondary text-black px-4 py-3 rounded-md shadow-md w-full">
+          <div className="flex items-center justify-between w-full">
+            <span className="text-sm font-medium">
+              <strong>Welcome {userName}!</strong>
+              <br /> Track Your Complaints and View Updates {":)"}
+            </span>
+            <button onClick={() => setShowBanner(false)}>
+              <FiX className="text-lg" />
+            </button>
           </div>
           <button
             onClick={() => setShowBanner(false)}

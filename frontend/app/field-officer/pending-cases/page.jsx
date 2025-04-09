@@ -5,6 +5,10 @@ import Image from "next/image";
 import toast from "react-hot-toast";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import dynamic from "next/dynamic";
+const DynamicMapView = dynamic(() => import("../../components/MapView"), {
+  ssr: false,
+});
 import {
   ThumbsUp,
   MessageCircle,
@@ -17,16 +21,16 @@ function PendingCases() {
   const [pendingComplaints, setPendingComplaints] = useState([]);
   const [viewMode, setViewMode] = useState({});
 
-  const pinIcon = useMemo(
-    () =>
-      new L.Icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 42],
-        popupAnchor: [0, -42],
-      }),
-    []
-  );
+  const pinIcon = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const L = require("leaflet");
+    return new L.Icon({
+      iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
+      iconSize: [32, 32],
+      iconAnchor: [16, 42],
+      popupAnchor: [0, -42],
+    });
+  }, []);
 
   useEffect(() => {
     async function fetchPendingComplaints() {
@@ -145,23 +149,10 @@ function PendingCases() {
                     </p>
                   )
                 ) : complaint.location ? (
-                  <MapContainer
-                    center={complaint.location.split(",").map(Number)}
-                    zoom={15}
-                    scrollWheelZoom={false}
-                    className="w-full h-full z-0 rounded"
-                  >
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    <Marker
-                      position={complaint.location.split(",").map(Number)}
-                      icon={pinIcon}
-                    >
-                      <Popup>{complaint.category} reported here.</Popup>
-                    </Marker>
-                  </MapContainer>
+                  <DynamicMapView
+                    location={complaint.location}
+                    category={complaint.category}
+                  />
                 ) : (
                   <p className="text-gray-500 flex items-center justify-center h-full text-center text-sm">
                     Invalid location data
