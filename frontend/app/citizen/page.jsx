@@ -1,7 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { FiX, FiSearch } from "react-icons/fi";
-import ComplainCard from "../components/ComplainCard";
+import dynamic from "next/dynamic";
+
+const ComplainCard = dynamic(() => import("../components/ComplainCard"), {
+  ssr: false,
+});
 
 function Page() {
   const [showBanner, setShowBanner] = useState(true);
@@ -9,36 +13,30 @@ function Page() {
   const [selectedWard, setSelectedWard] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [complaints, setComplaints] = useState([]);
+  const [userName, setUserName] = useState("");
 
   const categories = ["Road Repair", "Water Supply", "Garbage Collection", "Pothole"];
   const wards = ["Ward 1", "Ward 2", "Ward 3", "Ward 16", "Ward 17"];
 
   useEffect(() => {
-    async function fetchComplaints() {
-      try {
-        const city = localStorage.getItem("user-city");
-        let url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaints`);
-
-        if (city) url.searchParams.append("city", city);
-        if (selectedWard) url.searchParams.append("ward", selectedWard);
-        if (selectedCategory) url.searchParams.append("category", selectedCategory);
-
-        // If search query is a number, treat it as complaint_id
-        if (searchQuery && !isNaN(searchQuery)) {
-          url.searchParams.append("complaint_id", searchQuery);
-        }
-
-        const response = await fetch(url);
-        const data = await response.json();
-        setComplaints(data.complaints);
-      } catch (error) {
-        console.error("Error fetching complaints:", error);
-      }
+    const city = localStorage.getItem("user-city");
+    const name = localStorage.getItem("user-name") || "Citizen";
+    setUserName(name.split(" ")[0]);
+  
+    let url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaints`);
+    if (city) url.searchParams.append("city", city);
+    if (selectedWard) url.searchParams.append("ward", selectedWard);
+    if (selectedCategory) url.searchParams.append("category", selectedCategory);
+    if (searchQuery && !isNaN(searchQuery)) {
+      url.searchParams.append("complaint_id", searchQuery);
     }
-
-    fetchComplaints();
-  }, [selectedCategory, selectedWard, searchQuery]); // ✅ Fetch when filters or search query change
-
+  
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => setComplaints(data.complaints))
+      .catch((error) => console.error("Error fetching complaints:", error));
+  }, [selectedCategory, selectedWard, searchQuery]);
+  
   return (
     <div className="p-4 bg-background min-h-screen">
       {/* ✅ Green Banner (Dismissable) */}
@@ -46,7 +44,7 @@ function Page() {
         <div className="flex bg-secondary text-black px-4 py-3 rounded-md shadow-md w-full">
           <div className="flex items-center justify-between w-full">
             <span className="text-sm font-medium">
-              <strong>Welcome {localStorage.getItem("user-name").split(" ")[0]}!</strong>
+              <strong>Welcome {userName}!</strong>
               <br /> Track Your Complaints and View Updates {":)"}
             </span>
             <button onClick={() => setShowBanner(false)}>
