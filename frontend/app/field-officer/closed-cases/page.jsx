@@ -4,24 +4,16 @@ import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import dynamic from "next/dynamic";
 import { Image as ImageIcon, MapPin, Repeat, Eye } from "lucide-react";
+const DynamicMapView = dynamic(() => import("../../components/MapView"), {
+  ssr: false,
+});
 
 function ClosedCases() {
   const [closedComplaints, setClosedComplaints] = useState([]);
   const [viewMode, setViewMode] = useState({}); // Tracks image/map toggle state
   const [showResolved, setShowResolved] = useState({}); // Tracks resolved image visibility
-
-  // Memoized pin icon
-  const pinIcon = useMemo(() => {
-    if (typeof window === "undefined") return null;
-    const L = require("leaflet");
-    return new L.Icon({
-      iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
-      iconSize: [32, 32],
-      iconAnchor: [16, 42],
-      popupAnchor: [0, -42],
-    });
-  }, []);
 
   useEffect(() => {
     async function fetchClosedComplaints() {
@@ -120,25 +112,10 @@ function ClosedCases() {
                     </div>
                   )
                 ) : complaint.location ? (
-                  <MapContainer
-                    center={complaint.location.split(",").map(Number)}
-                    zoom={15}
-                    scrollWheelZoom={false}
-                    className="w-full h-full z-0"
-                  >
-                    <TileLayer
-                      attribution="&copy; OpenStreetMap contributors"
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    {pinIcon && (
-                      <Marker
-                        position={complaint.location.split(",").map(Number)}
-                        icon={pinIcon}
-                      >
-                        <Popup>{complaint.category} reported here.</Popup>
-                      </Marker>
-                    )}
-                  </MapContainer>
+                  <DynamicMapView
+                    location={complaint.location}
+                    category={complaint.category}
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-500">
                     Invalid location data
