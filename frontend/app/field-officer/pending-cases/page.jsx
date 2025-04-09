@@ -17,16 +17,16 @@ function PendingCases() {
   const [pendingComplaints, setPendingComplaints] = useState([]);
   const [viewMode, setViewMode] = useState({});
 
-  const pinIcon = useMemo(
-    () =>
-      new L.Icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 42],
-        popupAnchor: [0, -42],
-      }),
-    []
-  );
+  const pinIcon = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const L = require("leaflet");
+    return new L.Icon({
+      iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
+      iconSize: [32, 32],
+      iconAnchor: [16, 42],
+      popupAnchor: [0, -42],
+    });
+  }, []);
 
   useEffect(() => {
     async function fetchPendingComplaints() {
@@ -155,12 +155,14 @@ function PendingCases() {
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-                    <Marker
-                      position={complaint.location.split(",").map(Number)}
-                      icon={pinIcon}
-                    >
-                      <Popup>{complaint.category} reported here.</Popup>
-                    </Marker>
+                    {pinIcon && (
+                      <Marker
+                        position={complaint.location.split(",").map(Number)}
+                        icon={pinIcon}
+                      >
+                        <Popup>{complaint.category} reported here.</Popup>
+                      </Marker>
+                    )}
                   </MapContainer>
                 ) : (
                   <p className="text-gray-500 flex items-center justify-center h-full text-center text-sm">

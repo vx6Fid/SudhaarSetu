@@ -26,12 +26,16 @@ function ComplainCard({ complaint }) {
   const [comments, setComments] = useState(complaint.commentsList || []);
   const [newComment, setNewComment] = useState("");
 
-  const pinIcon = new L.Icon({
-    iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
-    iconSize: [32, 32],
-    iconAnchor: [16, 42],
-    popupAnchor: [0, -42],
-  });
+  const pinIcon = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const L = require("leaflet");
+    return new L.Icon({
+      iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
+      iconSize: [32, 32],
+      iconAnchor: [16, 42],
+      popupAnchor: [0, -42],
+    });
+  }, []);
 
   const toggleView = () => setViewMode(!viewMode);
 
@@ -146,12 +150,14 @@ function ComplainCard({ complaint }) {
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-                    <Marker
-                      position={complaint.location.split(",").map(Number)}
-                      icon={pinIcon}
-                    >
-                      <Popup>{complaint.category} reported here.</Popup>
-                    </Marker>
+                    {pinIcon && (
+                      <Marker
+                        position={complaint.location.split(",").map(Number)}
+                        icon={pinIcon}
+                      >
+                        <Popup>{complaint.category} reported here.</Popup>
+                      </Marker>
+                    )}
                   </MapContainer>
                 </div>
               ) : (

@@ -12,16 +12,16 @@ function ClosedCases() {
   const [showResolved, setShowResolved] = useState({}); // Tracks resolved image visibility
 
   // Memoized pin icon
-  const pinIcon = useMemo(
-    () =>
-      new L.Icon({
-        iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 42],
-        popupAnchor: [0, -42],
-      }),
-    []
-  );
+  const pinIcon = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const L = require("leaflet");
+    return new L.Icon({
+      iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
+      iconSize: [32, 32],
+      iconAnchor: [16, 42],
+      popupAnchor: [0, -42],
+    });
+  }, []);
 
   useEffect(() => {
     async function fetchClosedComplaints() {
@@ -130,12 +130,14 @@ function ClosedCases() {
                       attribution="&copy; OpenStreetMap contributors"
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-                    <Marker
-                      position={complaint.location.split(",").map(Number)}
-                      icon={pinIcon}
-                    >
-                      <Popup>{complaint.category} reported here.</Popup>
-                    </Marker>
+                    {pinIcon && (
+                      <Marker
+                        position={complaint.location.split(",").map(Number)}
+                        icon={pinIcon}
+                      >
+                        <Popup>{complaint.category} reported here.</Popup>
+                      </Marker>
+                    )}
                   </MapContainer>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-500">

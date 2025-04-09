@@ -13,7 +13,7 @@ export default function FileComplaint() {
     city: "",
     state: "",
   });
-  const router = useRouter(); 
+  const router = useRouter();
   const pinIcon = new L.Icon({
     iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
     iconSize: [32, 32],
