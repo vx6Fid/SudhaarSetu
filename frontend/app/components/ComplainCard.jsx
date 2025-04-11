@@ -13,18 +13,21 @@ import {
   MapPin,
   Image as ImageIcon,
   Send,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
 function ComplainCard({ complaint }) {
   const [viewMode, setViewMode] = useState(false);
   const [upvotes, setUpvotes] = useState(complaint.upvotes);
-  const [commentslength, setCommentsLength] = useState(
-    complaint.total_comments
-  );
+  const [commentsLength, setCommentsLength] = useState(complaint.total_comments);
   const [comments, setComments] = useState(complaint.commentsList || []);
   const [newComment, setNewComment] = useState("");
+  const [showComments, setShowComments] = useState(false);
+  const [isUpvoted, setIsUpvoted] = useState(false);
 
   const pinIcon = new L.Icon({
     iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
@@ -34,9 +37,12 @@ function ComplainCard({ complaint }) {
   });
 
   const toggleView = () => setViewMode(!viewMode);
+  const toggleComments = () => setShowComments(!showComments);
 
   // Handle Upvote
   const handleUpvote = async () => {
+    if (isUpvoted) return; // Prevent multiple upvotes
+    
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaints/${complaint.id}/like`,
@@ -51,6 +57,7 @@ function ComplainCard({ complaint }) {
 
       if (response.ok) {
         setUpvotes(upvotes + 1);
+        setIsUpvoted(true);
       } else {
         console.error("Failed to upvote");
       }
@@ -88,7 +95,7 @@ function ComplainCard({ complaint }) {
       if (response.ok) {
         setComments([...comments, responseData]);
         setNewComment("");
-        setCommentsLength(commentslength + 1);
+        setCommentsLength(commentsLength + 1);
       } else {
         console.error("Failed to add comment:", responseData);
       }
@@ -98,47 +105,56 @@ function ComplainCard({ complaint }) {
   };
 
   return (
-    <div className="bg-[#F8E7D2] shadow-lg rounded-xl px-4 sm:px-5 pt-4 sm:pt-5 pb-2 border border-gray-300 w-full max-w-2xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <div>
-          <h3 className="text-lg md:text-xl font-semibold text-gray-800">
-            {complaint.category}
-          </h3>
-          <div className="text-sm italic">Ward: {complaint.ward_no}</div>
+    <div className="bg-gray-100 shadow-xl rounded-2xl overflow-hidden border border-gray-200 w-full max-w-2xl mx-auto transition-all duration-300 hover:shadow-2xl">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-accent to-[#b86e38] px-5 py-3">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-bold text-white">{complaint.category}</h3>
+            <div className="text-xs text-white/90">Ward: {complaint.ward_no}</div>
+          </div>
+          
+          <button
+            className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/20 text-white font-medium text-sm transition hover:bg-white/30 backdrop-blur-sm"
+            onClick={toggleView}
+          >
+            {viewMode ? (
+              <>
+                <ImageIcon size={16} />
+                <span className="hidden sm:inline">Images</span>
+              </>
+            ) : (
+              <>
+                <MapPin size={16} />
+                <span className="hidden sm:inline">Location</span>
+              </>
+            )}
+          </button>
         </div>
-        
-        <button
-          className="mt-2 sm:mt-0 flex items-center gap-2 px-3 py-1 sm:px-4 sm:py-2 rounded-full bg-orange-400 text-white font-medium shadow-md text-xs sm:text-sm md:text-base transition hover:bg-orange-500"
-          onClick={toggleView}
-        >
-          {viewMode ? <ImageIcon size={16} /> : <MapPin size={16} />}
-          <span className="hidden sm:inline">
-            {viewMode ? "View Image" : "View Map"}
-          </span>
-        </button>
       </div>
 
-      <div className="mt-3 sm:mt-4">
+      {/* Media Content */}
+      <div className="px-4 pt-4">
         <Swiper
           effect="coverflow"
           grabCursor
           centeredSlides
           slidesPerView="auto"
           coverflowEffect={{
-            rotate: 20,
-            stretch: 50,
+            rotate: 10,
+            stretch: 0,
             depth: 100,
             modifier: 1,
             slideShadows: true,
           }}
-          pagination
+          pagination={{ clickable: true }}
           modules={[EffectCoverflow, Pagination]}
-          className="w-full"
+          className="w-full rounded-xl overflow-hidden"
         >
           <SwiperSlide>
             {viewMode ? (
               complaint.location ? (
-                <div className="w-full">
+                <div className="w-full relative">
                   <MapContainer
                     center={complaint.location.split(",").map(Number)}
                     zoom={15}
@@ -153,58 +169,71 @@ function ComplainCard({ complaint }) {
                       position={complaint.location.split(",").map(Number)}
                       icon={pinIcon}
                     >
-                      <Popup>{complaint.category} reported here.</Popup>
+                      <Popup className="font-medium">{complaint.category} reported here</Popup>
                     </Marker>
                   </MapContainer>
+                  <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                    {complaint.location}
+                  </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center w-full h-[200px] sm:h-[250px] md:h-[300px] bg-gray-100 text-gray-500 rounded-lg">
-                  Invalid location data
+                <div className="flex flex-col items-center justify-center w-full h-[200px] sm:h-[250px] md:h-[300px] bg-gray-100 text-gray-500 rounded-lg">
+                  <MapPin size={24} className="mb-2" />
+                  <span>Location data not available</span>
                 </div>
               )
             ) : complaint.image ? (
-              <Image
-                src={complaint.image}
-                alt="Complaint Image"
-                width={500}
-                height={350}
-                className="w-full h-[200px] sm:h-[250px] md:h-[300px] object-cover rounded-lg"
-                priority={false}
-              />
+              <div className="relative w-full h-[200px] sm:h-[250px] md:h-[300px]">
+                <Image
+                  src={complaint.image}
+                  alt="Complaint Image"
+                  fill
+                  className="object-cover rounded-lg"
+                  priority={false}
+                />
+              </div>
             ) : (
-              <div className="flex items-center justify-center w-full h-[200px] sm:h-[250px] md:h-[300px] bg-gray-100 text-gray-500 rounded-lg">
-                No image available
+              <div className="flex flex-col items-center justify-center w-full h-[200px] sm:h-[250px] md:h-[300px] bg-gray-100 text-gray-500 rounded-lg">
+                <ImageIcon size={24} className="mb-2" />
+                <span>No image available</span>
               </div>
             )}
           </SwiperSlide>
         </Swiper>
       </div>
 
-      <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-        <div className="flex items-center border border-gray-300 rounded-full w-full sm:w-auto">
-          {/* Upvote Button */}
+
+      {/* Status and Actions */}
+      <div className="px-5 py-3 pb-3 flex justify-between items-center">
+        <div className="flex items-center gap-2">
           <button
             onClick={handleUpvote}
-            className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1 sm:py-2 text-gray-700 hover:text-red-500 bg-gray-100 hover:bg-gray-200 rounded-l-full transition duration-200 shadow-sm text-sm sm:text-base"
+            className={`flex items-center gap-1 px-3 py-1 rounded-full transition duration-200 ${
+              isUpvoted 
+                ? "bg-orange-100 text-orange-600"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
           >
-            <ThumbsUp size={16} className="hover:scale-110" />
-            <span className="font-medium">{upvotes}</span>
+            <ThumbsUp size={16} className={isUpvoted ? "fill-orange-600" : ""} />
+            <span className="font-medium text-sm">{upvotes}</span>
           </button>
 
-          {/* Comments Button */}
-          <button className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1 sm:py-2 text-gray-700 bg-orange-300 hover:bg-orange-400 hover:text-white rounded-r-full transition duration-200 shadow-sm text-sm sm:text-base">
-            <MessageCircle size={16} className="hover:scale-110" />
-            <span className="font-medium">{commentslength}</span>
+          <button 
+            onClick={toggleComments}
+            className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition duration-200"
+          >
+            <MessageCircle size={16} />
+            <span className="font-medium text-sm">{commentsLength}</span>
           </button>
         </div>
 
         <span
-          className={`px-3 sm:px-4 py-1 sm:py-2 border rounded-full font-medium shadow-md text-xs sm:text-sm ${
+          className={`px-3 py-1 rounded-full font-medium text-sm ${
             complaint.status === "pending"
-              ? "bg-red-300 text-red-600 border-red-600"
+              ? "bg-red-200 text-red-700"
               : complaint.status === "resolved"
-              ? "bg-green-300 text-green-600 border-green-600"
-              : "bg-orange-300 text-orange-600 border-orange-600"
+              ? "bg-green-200 text-green-700"
+              : "bg-yellow-200 text-yellow-700"
           }`}
         >
           {complaint.status === "pending"
@@ -215,23 +244,75 @@ function ComplainCard({ complaint }) {
         </span>
       </div>
 
-      <div className="mt-2 sm:mt-3 border-t border-gray-400 pt-2 sm:pt-3">
-        <div className="mt-1 flex">
+      {/* Comments Section */}
+      {showComments && (
+        <div className="border-t border-gray-200 px-5 py-3 bg-gray-50">
+          <div className="mb-3">
+            {comments.length > 0 ? (
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                {comments.map((comment, index) => (
+                  <div key={index} className="flex gap-2">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-200 flex items-center justify-center text-orange-700 font-bold">
+                      {comment.user_name?.charAt(0) || "U"}
+                    </div>
+                    <div className="flex-1">
+                      <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-200">
+                        <div className="font-medium text-sm text-gray-800">{comment.user_name || "Anonymous"}</div>
+                        <p className="text-gray-600 text-sm">{comment.comment_text}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-4">No comments yet</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Comment Input */}
+      <div className="px-5 py-3 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center gap-2">
           <input
             type="text"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="flex-1 p-2 border border-gray-400 rounded-lg text-sm sm:text-base"
+            onKeyPress={(e) => e.key === "Enter" && handleCommentSubmit()}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
             placeholder="Write a comment..."
           />
           <button
             onClick={handleCommentSubmit}
-            className="ml-2 hover:text-orange-500"
+            disabled={!newComment.trim()}
+            className={`p-2 rounded-full ${
+              newComment.trim()
+                ? "bg-orange-500 text-white hover:bg-orange-600"
+                : "bg-gray-200 text-gray-400"
+            } transition duration-200`}
           >
-            <Send size={20} className="sm:size-6" />
+            <Send size={18} />
           </button>
         </div>
       </div>
+
+      {/* Toggle Comments Button */}
+      <button
+        onClick={toggleComments}
+        className="w-full py-2 bg-gray-100 text-gray-600 hover:bg-gray-200 transition duration-200 flex items-center justify-center gap-1 text-sm"
+      >
+        {showComments ? (
+          <>
+            <ChevronUp size={16} />
+            Hide Comments
+          </>
+        ) : (
+          <>
+            <ChevronDown size={16} />
+            Show Comments
+          </>
+        )}
+      </button>
     </div>
   );
 }
