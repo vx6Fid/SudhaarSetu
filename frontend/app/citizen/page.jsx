@@ -92,7 +92,7 @@ function Page() {
   }, [selectedCategory, selectedWard, searchQuery]);
 
   return (
-    <div className="p-4 md:p-8 w-full min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+    <div className="p-4 md:p-6 w-full min-h-screen">
       <div className="max-w-full mx-auto">
         {/* Welcome Banner with Animation */}
         <AnimatePresence>
