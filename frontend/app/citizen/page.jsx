@@ -22,23 +22,23 @@ const ComplainCard = dynamic(() => import("../components/ComplainCard"), {
 const bannerVariants = {
   hidden: { opacity: 0, y: -20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
+  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
 };
 
 const filterVariants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0 }
+  visible: { opacity: 1, y: 0 },
 };
 
 const loadingVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
-  exit: { opacity: 0 }
+  exit: { opacity: 0 },
 };
 
 function Page() {
@@ -49,6 +49,7 @@ function Page() {
   const [complaints, setComplaints] = useState([]);
   const [userName, setUserName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [likeComplaint, setLikeComplaint] = useState([]);
 
   const categories = [
     "Road Repair",
@@ -66,17 +67,20 @@ function Page() {
         const name = localStorage.getItem("user-name") || "Citizen";
         setUserName(name.split(" ")[0]);
 
-        let url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaints`);
+        let url = new URL(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaints`
+        );
         if (city) url.searchParams.append("city", city);
         if (selectedWard) url.searchParams.append("ward", selectedWard);
-        if (selectedCategory) url.searchParams.append("category", selectedCategory);
+        if (selectedCategory)
+          url.searchParams.append("category", selectedCategory);
         if (searchQuery && !isNaN(searchQuery)) {
           url.searchParams.append("complaint_id", searchQuery);
         }
 
         const response = await fetch(url);
         const data = await response.json();
-        
+
         // Animate the complaints update
         setComplaints([]); // Clear first for animation
         setTimeout(() => setComplaints(data.complaints || []), 300);
@@ -87,9 +91,35 @@ function Page() {
       }
     };
 
-    const timer = setTimeout(fetchComplaints, 500); // Debounce with longer delay for animation
+    const timer = setTimeout(fetchComplaints, 500); // Delay added for animation
     return () => clearTimeout(timer);
   }, [selectedCategory, selectedWard, searchQuery]);
+
+  useEffect(() => {
+    const fetchLikedComplaints = async () => {
+      try {
+        const userId = localStorage.getItem("user-id");
+        if (!userId) return;
+
+        const url = new URL(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/liked-complaints`
+        );
+        url.searchParams.append("user_id", userId);
+
+        const response = await fetch(url.toString(), {
+          method: "GET",
+        });
+
+        const data = await response.json();
+        const ids = data.likedComplaints.map((item) => item.complaint_id);
+        setLikeComplaint(ids);
+      } catch (error) {
+        console.error("Error fetching liked complaints:", error);
+      }
+    };
+
+    fetchLikedComplaints();
+  }, []);
 
   return (
     <div className=" md:p-5 w-full min-h-screen">
@@ -106,15 +136,21 @@ function Page() {
             >
               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <motion.div 
+                  <motion.div
                     animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 3,
+                      ease: "easeInOut",
+                    }}
                     className="p-3 rounded-full bg-white/20 backdrop-blur-sm"
                   >
                     <FiBell className="text-white text-xl" />
                   </motion.div>
                   <div>
-                    <h2 className="text-xl font-bold">Welcome back, {userName}!</h2>
+                    <h2 className="text-xl font-bold">
+                      Welcome back, {userName}!
+                    </h2>
                     <p className="text-blue-100">
                       Track your complaints and view updates in real-time
                     </p>
@@ -129,18 +165,18 @@ function Page() {
                   <FiX className="text-white" />
                 </motion.button>
               </div>
-              <motion.div 
-                animate={{ 
+              <motion.div
+                animate={{
                   x: [0, 5, -5, 0],
-                  y: [0, 5, -5, 0] 
+                  y: [0, 5, -5, 0],
                 }}
                 transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
                 className="absolute -right-10 -bottom-10 w-32 h-32 rounded-full bg-white/10"
               ></motion.div>
-              <motion.div 
-                animate={{ 
+              <motion.div
+                animate={{
                   x: [0, -3, 3, 0],
-                  y: [0, -3, 3, 0] 
+                  y: [0, -3, 3, 0],
                 }}
                 transition={{ repeat: Infinity, duration: 6, ease: "linear" }}
                 className="absolute -right-5 -top-5 w-24 h-24 rounded-full bg-white/5"
@@ -157,16 +193,26 @@ function Page() {
           className="bg-[#F8E7D2] p-6 rounded-2xl shadow-md border border-gray-100 mb-8"
         >
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <motion.h2 variants={itemVariants} className="text-2xl font-bold text-gray-800 flex items-center">
+            <motion.h2
+              variants={itemVariants}
+              className="text-2xl font-bold text-gray-800 flex items-center"
+            >
               <FiFilter className="mr-2 text-orange-500" />
               Filter Complaints
             </motion.h2>
-            <motion.div variants={itemVariants} className="mt-3 md:mt-0 text-sm text-gray-500">
-              {complaints.length} {complaints.length === 1 ? "result" : "results"} found
+            <motion.div
+              variants={itemVariants}
+              className="mt-3 md:mt-0 text-sm text-gray-500"
+            >
+              {complaints.length}{" "}
+              {complaints.length === 1 ? "result" : "results"} found
             </motion.div>
           </div>
 
-          <motion.div variants={filterVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <motion.div
+            variants={filterVariants}
+            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          >
             {/* Category Dropdown */}
             <motion.div variants={itemVariants}>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -252,7 +298,7 @@ function Page() {
                   transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
                   className="rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mb-4"
                 ></motion.div>
-                <motion.p 
+                <motion.p
                   animate={{ opacity: [0.6, 1, 0.6] }}
                   transition={{ repeat: Infinity, duration: 2 }}
                   className="text-gray-600"
@@ -267,7 +313,7 @@ function Page() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
               >
-                <motion.h3 
+                <motion.h3
                   initial={{ x: -20 }}
                   animate={{ x: 0 }}
                   className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-6"
@@ -299,17 +345,24 @@ function Page() {
                     ]}
                     className="pb-8"
                   >
-                    {complaints.map((complaint, index) => (
-                      <motion.div
-                        key={complaint.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="px-2 w-full"
-                      >
-                        <ComplainCard complaint={complaint} />
-                      </motion.div>
-                    ))}
+                    {complaints.map((complaint, index) => {
+                      const isLiked = likeComplaint.includes(complaint.id);
+
+                      return (
+                        <motion.div
+                          key={complaint.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="px-2 w-full"
+                        >
+                          <ComplainCard
+                            complaint={complaint}
+                            isLiked={isLiked}
+                          />
+                        </motion.div>
+                      );
+                    })}
                   </Slider>
                 </div>
               </motion.div>
@@ -329,7 +382,7 @@ function Page() {
                 >
                   <FiInbox className="text-gray-400 text-2xl sm:text-3xl" />
                 </motion.div>
-                <motion.h3 
+                <motion.h3
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2 }}
@@ -337,7 +390,7 @@ function Page() {
                 >
                   No complaints found
                 </motion.h3>
-                <motion.p 
+                <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.4 }}

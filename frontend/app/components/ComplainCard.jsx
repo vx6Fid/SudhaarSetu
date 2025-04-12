@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "swiper/css";
 import "swiper/css/effect-coverflow";
 import "swiper/css/pagination";
+import toast from "react-hot-toast";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { EffectCoverflow, Pagination } from "swiper/modules";
 import Image from "next/image";
@@ -20,14 +21,16 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-function ComplainCard({ complaint }) {
+function ComplainCard({ complaint, isLiked }) {
   const [viewMode, setViewMode] = useState(false);
-  const [upvotes, setUpvotes] = useState(complaint.upvotes);
-  const [commentsLength, setCommentsLength] = useState(complaint.total_comments);
+  const [upvotes, setUpvotes] = useState(complaint.upvotes || 0);
+  const [commentsLength, setCommentsLength] = useState(
+    complaint.total_comments || 0
+  );
   const [comments, setComments] = useState(complaint.commentsList || []);
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
-  const [isUpvoted, setIsUpvoted] = useState(false);
+  const [hasLiked, setHasLiked] = useState(isLiked);
 
   const pinIcon = new L.Icon({
     iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
@@ -41,8 +44,8 @@ function ComplainCard({ complaint }) {
 
   // Handle Upvote
   const handleUpvote = async () => {
-    if (isUpvoted) return; // Prevent multiple upvotes
-    
+    if (isLiked) return;
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaints/${complaint.id}/like`,
@@ -56,10 +59,11 @@ function ComplainCard({ complaint }) {
       );
 
       if (response.ok) {
-        setUpvotes(upvotes + 1);
-        setIsUpvoted(true);
+        setUpvotes((prev) => prev + 1);
+        setHasLiked(true);
+        toast.success("Upvoted successfully");
       } else {
-        console.error("Failed to upvote");
+        toast.error("Failed to upvote");
       }
     } catch (error) {
       console.error("Error upvoting:", error);
@@ -70,6 +74,7 @@ function ComplainCard({ complaint }) {
     if (!newComment.trim()) return;
 
     const userId = localStorage.getItem("userId");
+    const userName = localStorage.getItem("user-name");
     if (!userId) {
       console.error("User ID not found in localStorage");
       return;
@@ -86,6 +91,7 @@ function ComplainCard({ complaint }) {
           body: JSON.stringify({
             user_id: userId,
             comment_text: newComment,
+            userName: userName,
           }),
         }
       );
@@ -93,16 +99,36 @@ function ComplainCard({ complaint }) {
       const responseData = await response.json();
 
       if (response.ok) {
-        setComments([...comments, responseData]);
+        setComments([...comments, responseData.comment]);
         setNewComment("");
         setCommentsLength(commentsLength + 1);
+        toast.success("Comment added successfully");
       } else {
-        console.error("Failed to add comment:", responseData);
+        console.error("Failed to add comment:", responseData.error || responseData);
+        toast.error(responseData.error || "Failed to add comment");
       }
     } catch (error) {
       console.error("Error adding comment:", error);
+      toast.error("Error adding comment");
     }
   };
+
+  useEffect(() => {
+    if (!complaint?.id) return;
+    const fetchComments = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaint/${complaint.id}/comments`
+        );
+        const data = await response.json();
+        setComments(data.comments);
+      } catch (error) {
+        console.error("Error fetching comments:", error);
+      }
+    };
+
+    fetchComments();
+  }, [complaint.id]);
 
   return (
     <div className="bg-gray-100 shadow-xl rounded-2xl overflow-hidden border border-gray-200 w-full max-w-2xl mx-auto transition-all duration-300 hover:shadow-2xl">
@@ -110,10 +136,14 @@ function ComplainCard({ complaint }) {
       <div className="bg-gradient-to-r from-accent to-[#b86e38] px-5 py-3">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-lg font-bold text-white">{complaint.category}</h3>
-            <div className="text-xs text-white/90">Ward: {complaint.ward_no}</div>
+            <h3 className="text-lg font-bold text-white">
+              {complaint.category}
+            </h3>
+            <div className="text-xs text-white/90">
+              Ward: {complaint.ward_no}
+            </div>
           </div>
-          
+
           <button
             className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/20 text-white font-medium text-sm transition hover:bg-white/30 backdrop-blur-sm"
             onClick={toggleView}
@@ -156,7 +186,10 @@ function ComplainCard({ complaint }) {
               complaint.location ? (
                 <div className="w-full relative">
                   <MapContainer
-                    center={complaint.location.split(",").map(Number)}
+                    center={complaint.location
+                      .split(",")
+                      .map((coord) => Number.parseFloat(coord).toFixed(3))
+                      .map(Number)}
                     zoom={15}
                     scrollWheelZoom={false}
                     className="w-full h-[200px] sm:h-[250px] md:h-[300px] rounded-lg"
@@ -169,7 +202,9 @@ function ComplainCard({ complaint }) {
                       position={complaint.location.split(",").map(Number)}
                       icon={pinIcon}
                     >
-                      <Popup className="font-medium">{complaint.category} reported here</Popup>
+                      <Popup className="font-medium">
+                        {complaint.category} reported here
+                      </Popup>
                     </Marker>
                   </MapContainer>
                   <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
@@ -202,23 +237,22 @@ function ComplainCard({ complaint }) {
         </Swiper>
       </div>
 
-
       {/* Status and Actions */}
       <div className="px-5 py-3 pb-3 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <button
             onClick={handleUpvote}
             className={`flex items-center gap-1 px-3 py-1 rounded-full transition duration-200 ${
-              isUpvoted 
+              hasLiked
                 ? "bg-orange-100 text-orange-600"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
-            <ThumbsUp size={16} className={isUpvoted ? "fill-orange-600" : ""} />
+            <ThumbsUp size={16} className={hasLiked ? "fill-orange-600" : ""} />
             <span className="font-medium text-sm">{upvotes}</span>
           </button>
 
-          <button 
+          <button
             onClick={toggleComments}
             className="flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition duration-200"
           >
@@ -257,15 +291,21 @@ function ComplainCard({ complaint }) {
                     </div>
                     <div className="flex-1">
                       <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-200">
-                        <div className="font-medium text-sm text-gray-800">{comment.user_name || "Anonymous"}</div>
-                        <p className="text-gray-600 text-sm">{comment.comment_text}</p>
+                        <div className="italic text-xs text-gray-800">
+                          {comment.user_name || "Anonymous"}
+                        </div>
+                        <p className="text-gray-600 text-sm">
+                          {comment.comment_text}
+                        </p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center text-gray-500 py-4">No comments yet</div>
+              <div className="text-center text-gray-500 py-4">
+                No comments yet
+              </div>
             )}
           </div>
         </div>
@@ -278,7 +318,11 @@ function ComplainCard({ complaint }) {
             type="text"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleCommentSubmit()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && newComment.trim()) {
+                handleCommentSubmit();
+              }
+            }}
             className="flex-1 px-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
             placeholder="Write a comment..."
           />

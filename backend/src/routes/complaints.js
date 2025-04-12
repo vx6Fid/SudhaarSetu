@@ -255,4 +255,43 @@ router.get("/user/complaints", async (req, res) => {
   }
 });
 
+// Fetch liked complaints by user_id
+router.get("/user/liked-complaints", async (req, res) => {
+  const { user_id } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ error: "User ID is required" });
+  }
+
+  try {
+    const query =
+      "SELECT * FROM complaint_upvotes WHERE user_id = $1";
+    const result = await pool.query(query, [user_id]);
+
+    res.json({ likedComplaints: result.rows });
+  } catch (error) {
+    console.error("Error fetching liked complaints:", error);
+    res.status(500).json({ error: error.message });
+  }
+}
+);
+
+// Fetch comments on a complaint 
+router.get("/complaint/:id/comments", async (req, res) => {
+  const complaintId = req.params.id;
+  if (!complaintId) {
+    return res.status(400).json({ error: "Complaint ID is required" });
+  }
+  try {
+    const query =
+      "SELECT * FROM comments WHERE complaint_id = $1 ORDER BY created_at DESC";
+    const result = await pool.query(query, [complaintId]);
+
+    res.json({ comments: result.rows });
+  } catch (error) {
+    console.error("Error fetching comments:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;

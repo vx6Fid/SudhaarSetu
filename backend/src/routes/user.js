@@ -157,7 +157,7 @@ router.post("/complaints/:id/like", async (req, res) => {
 // Comment on a complaint
 router.post("/complaints/:id/comment", async (req, res) => {
     const { id } = req.params;
-    const { user_id, comment_text } = req.body;
+    const { user_id, comment_text, userName } = req.body;
 
     if (!user_id || !comment_text.trim()) {
         return res.status(400).json({ error: "user_id and non-empty comment_text are required" });
@@ -175,9 +175,12 @@ router.post("/complaints/:id/comment", async (req, res) => {
 
         // Insert the comment
         const newComment = await pool.query(
-            "INSERT INTO comments (id, user_id, complaint_id, comment_text, likes_count, views_count, created_at) VALUES (gen_random_uuid(), $1, $2, $3, 0, 0, NOW()) RETURNING *",
-            [user_id, id, comment_text]
+            "INSERT INTO comments (id, user_id, complaint_id, comment_text, likes_count, views_count, created_at, user_name) VALUES (gen_random_uuid(), $1, $2, $3, 0, 0, NOW(), $4) RETURNING *",
+            [user_id, id, comment_text, userName]
         );
+        if (!newComment.rows[0]) {
+            throw new Error("Failed to insert comment.");
+        }
 
         // Increase the total_comments count in the complaints table
         await pool.query("UPDATE complaints SET total_comments = total_comments + 1 WHERE id = $1", [id]);
@@ -190,7 +193,7 @@ router.post("/complaints/:id/comment", async (req, res) => {
     } catch (error) {
         console.error(error);
         await pool.query("ROLLBACK"); // Rollback transaction on error
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ error: error.message || "Server error" });
     }
 });
 
