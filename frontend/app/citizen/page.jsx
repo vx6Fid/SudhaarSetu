@@ -98,7 +98,7 @@ function Page() {
   useEffect(() => {
     const fetchLikedComplaints = async () => {
       try {
-        const userId = localStorage.getItem("user-id");
+        const userId = localStorage.getItem("userId");
         if (!userId) return;
 
         const url = new URL(
@@ -112,6 +112,7 @@ function Page() {
 
         const data = await response.json();
         const ids = data.likedComplaints.map((item) => item.complaint_id);
+        console.log("Liked Complaints IDs:", ids);
         setLikeComplaint(ids);
       } catch (error) {
         console.error("Error fetching liked complaints:", error);

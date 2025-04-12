@@ -44,7 +44,10 @@ function ComplainCard({ complaint, isLiked }) {
 
   // Handle Upvote
   const handleUpvote = async () => {
-    if (isLiked) return;
+    if (isLiked) {
+      toast("You have already upvoted this complaint");
+      return;
+    }
 
     try {
       const response = await fetch(
