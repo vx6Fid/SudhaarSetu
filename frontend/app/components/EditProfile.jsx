@@ -28,80 +28,6 @@ const EditProfile = () => {
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    // Create moving dots background
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.style.position = 'fixed';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.width = '100vw';
-    canvas.style.height = '100vh';
-    canvas.style.zIndex = '-1';
-    canvas.style.opacity = '0.3';
-    document.body.appendChild(canvas);
-
-    // Set canvas size
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    // Dot parameters
-    const dots = [];
-    const dotCount = Math.floor((canvas.width * canvas.height) / 10000);
-    const colors = ['#3B82F6', '#10B981', '#6366F1', '#EC4899'];
-
-    // Create dots
-    for (let i = 0; i < dotCount; i++) {
-      dots.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 3 + 1,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        speed: Math.random() * 0.5 + 0.1,
-        angle: Math.random() * Math.PI * 2
-      });
-    }
-
-    // Animation loop
-    let animationId;
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      dots.forEach(dot => {
-        // Update position
-        dot.x += Math.cos(dot.angle) * dot.speed;
-        dot.y += Math.sin(dot.angle) * dot.speed;
-        
-        // Bounce off edges
-        if (dot.x < 0 || dot.x > canvas.width) dot.angle = Math.PI - dot.angle;
-        if (dot.y < 0 || dot.y > canvas.height) dot.angle = -dot.angle;
-        
-        // Draw dot
-        ctx.fillStyle = dot.color;
-        ctx.beginPath();
-        ctx.arc(dot.x, dot.y, dot.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      
-      animationId = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    // Handle resize
-    const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      cancelAnimationFrame(animationId);
-      window.removeEventListener('resize', handleResize);
-      document.body.removeChild(canvas);
-    };
-  }, []);
-
-  useEffect(() => {
     const storedUserID = localStorage.getItem("userId");
     const storedUserRole = localStorage.getItem("userRole");
 
@@ -177,7 +103,7 @@ const EditProfile = () => {
       }
 
       setSuccessMessage("Profile updated successfully!");
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage("");
@@ -187,36 +113,67 @@ const EditProfile = () => {
     }
   };
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-    </div>
-  );
-  
-  if (error) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p className="text-red-500 text-lg">Error: {error.message}</p>
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
 
-  const isCitizen = user.role === 'citizen';
+  if (error)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-500 text-lg">Error: {error.message}</p>
+      </div>
+    );
+
+  const isCitizen = user.role === "citizen";
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="min-h-screen text-gray-800 w-full overflow-hidden relative pl-6 pr-6"
     >
+      {/* Floating bubbles background */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {[...Array(15)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{
+              y: Math.random() * 800,
+              x: Math.random() * 800,
+              opacity: 0.3 + Math.random() * 0.5,
+              scale: 0.5 + Math.random() * 0.5,
+            }}
+            animate={{
+              y: [0, -200 - Math.random() * 300],
+              x: ["0%", `${Math.random() * 50 - 25}%`],
+            }}
+            transition={{
+              duration: 20 + Math.random() * 10,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: Math.random() * 5,
+            }}
+            className="absolute w-3 h-3 bg-primary rounded-full blur-sm"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+            }}
+          />
+        ))}
+      </div>
       {/* Header Section */}
-      <motion.div 
+      <motion.div
         initial={{ y: -50 }}
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 100 }}
         className="relative bg-gradient-to-br from-secondary to-primary h-52 flex items-center rounded-b-3xl px-6 justify-center shadow-xl"
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent rounded-b-3xl"></div>
-        <motion.button 
+        <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           className="absolute left-6 top-6 text-white bg-white/20 p-2 rounded-full backdrop-blur-sm shadow-sm hover:bg-white/30 transition-all"
@@ -225,7 +182,9 @@ const EditProfile = () => {
             <FiArrowLeft size={20} />
           </Link>
         </motion.button>
-        <h1 className="text-white text-3xl font-bold tracking-tight">Edit Profile</h1>
+        <h1 className="text-white text-3xl font-bold tracking-tight">
+          Edit Profile
+        </h1>
       </motion.div>
 
       {/* Form Section */}
@@ -261,7 +220,9 @@ const EditProfile = () => {
         >
           <div className="space-y-5">
             <div>
-              <label className="block text-gray-600 font-medium mb-1">Name</label>
+              <label className="block text-gray-600 font-medium mb-1">
+                Name
+              </label>
               <motion.input
                 type="text"
                 name="name"
@@ -273,7 +234,9 @@ const EditProfile = () => {
             </div>
 
             <div>
-              <label className="block text-gray-600 font-medium mb-1">Email</label>
+              <label className="block text-gray-600 font-medium mb-1">
+                Email
+              </label>
               <motion.input
                 type="email"
                 name="email"
@@ -285,7 +248,9 @@ const EditProfile = () => {
             </div>
 
             <div>
-              <label className="block text-gray-600 font-medium mb-1">Phone</label>
+              <label className="block text-gray-600 font-medium mb-1">
+                Phone
+              </label>
               <motion.input
                 type="text"
                 name="phone"
@@ -297,7 +262,9 @@ const EditProfile = () => {
             </div>
 
             <div>
-              <label className="block text-gray-600 font-medium mb-1">State</label>
+              <label className="block text-gray-600 font-medium mb-1">
+                State
+              </label>
               <motion.input
                 type="text"
                 name="state"
@@ -306,15 +273,17 @@ const EditProfile = () => {
                 disabled={!isCitizen}
                 whileFocus={{ scale: isCitizen ? 1.01 : 1 }}
                 className={`w-full p-3 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent ${
-                  isCitizen 
-                    ? "bg-gray-50 border border-gray-200" 
+                  isCitizen
+                    ? "bg-gray-50 border border-gray-200"
                     : "bg-gray-100 border border-gray-200 text-gray-500 cursor-not-allowed"
                 }`}
               />
             </div>
 
             <div>
-              <label className="block text-gray-600 font-medium mb-1">City</label>
+              <label className="block text-gray-600 font-medium mb-1">
+                City
+              </label>
               <motion.input
                 type="text"
                 name="city"
@@ -323,8 +292,8 @@ const EditProfile = () => {
                 disabled={!isCitizen}
                 whileFocus={{ scale: isCitizen ? 1.01 : 1 }}
                 className={`w-full p-3 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent ${
-                  isCitizen 
-                    ? "bg-gray-50 border border-gray-200" 
+                  isCitizen
+                    ? "bg-gray-50 border border-gray-200"
                     : "bg-gray-100 border border-gray-200 text-gray-500 cursor-not-allowed"
                 }`}
               />
@@ -332,7 +301,9 @@ const EditProfile = () => {
 
             {user.role !== "admin" && (
               <div>
-                <label className="block text-gray-600 font-medium mb-1">Ward</label>
+                <label className="block text-gray-600 font-medium mb-1">
+                  Ward
+                </label>
                 <motion.input
                   type="text"
                   name="ward"
@@ -341,8 +312,8 @@ const EditProfile = () => {
                   disabled={!isCitizen}
                   whileFocus={{ scale: isCitizen ? 1.01 : 1 }}
                   className={`w-full p-3 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent ${
-                    isCitizen 
-                      ? "bg-gray-50 border border-gray-200" 
+                    isCitizen
+                      ? "bg-gray-50 border border-gray-200"
                       : "bg-gray-100 border border-gray-200 text-gray-500 cursor-not-allowed"
                   }`}
                 />

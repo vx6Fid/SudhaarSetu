@@ -34,6 +34,26 @@ export default {
           '50%': { transform: 'translateY(-10px) translateX(5px) rotate(5deg)' },
         },
       },
+      animation: {
+        fadeInUp: 'fadeInUp 0.5s ease-out forwards',
+        slideInLeft: 'slideInLeft 0.6s ease-out',
+        slideInRight: 'slideInRight 0.6s ease-out',
+        'pulse-slow': 'pulse 6s infinite',
+      },
+      keyframes: {
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' }
+        },
+        slideInLeft: {
+          '0%': { opacity: '0', transform: 'translateX(-20px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' }
+        },
+        slideInRight: {
+          '0%': { opacity: '0', transform: 'translateX(20px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' }
+        }
+      }
     },
   },
   plugins: [],

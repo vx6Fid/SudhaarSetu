@@ -67,28 +67,67 @@ function Page() {
     // fetchReportData();
   }, []);
 
-  useEffect(() => {
-    // Simulate fetching ward data
-    const fetchWardData = async () => {
-      const wardCount = {};
+  // Helper function to generate random but visually distinct colors
+  const generateWardColors = (count) => {
+    const colorPalette = [
+      "#FF6B6B",
+      "#4ECDC4",
+      "#45B7D1",
+      "#FFA07A",
+      "#98D8C8",
+      "#F06292",
+      "#7986CB",
+      "#9575CD",
+      "#64B5F6",
+      "#4DB6AC",
+      "#81C784",
+      "#FFD54F",
+      "#FF8A65",
+      "#A1887F",
+      "#90A4AE",
+      "#E57373",
+      "#BA68C8",
+      "#4DD0E1",
+      "#AED581",
+      "#FFF176",
+      "#FFB74D",
+      "#FF7043",
+      "#A5D6A7",
+      "#CE93D8",
+      "#80DEEA",
+    ];
 
-      complaints.forEach((complaint) => {
-        if (complaint.status === "pending") {
-          const ward = complaint.ward_no || "Unknown";
-          if (!wardCount[ward]) wardCount[ward] = 0;
-          wardCount[ward]++;
-        }
-      });
+    // Shuffle array and take first 'count' elements
+    return [...colorPalette].sort(() => 0.5 - Math.random()).slice(0, count);
+  };
 
-      const wardArray = Object.keys(wardCount).map((wardName) => ({
-        name: wardName,
-        pendingComplaints: wardCount[wardName],
-      }));
+  // In your component:
+  const wardColors = generateWardColors(wardData.length);
 
-      setWardData(wardArray);
-    };
-    fetchWardData();
-  }, [complaints]);
+  // Then in your Doughnut chart configuration:
+  backgroundColor: wardColors,
+    useEffect(() => {
+      // Simulate fetching ward data
+      const fetchWardData = async () => {
+        const wardCount = {};
+
+        complaints.forEach((complaint) => {
+          if (complaint.status === "pending") {
+            const ward = complaint.ward_no || "Unknown";
+            if (!wardCount[ward]) wardCount[ward] = 0;
+            wardCount[ward]++;
+          }
+        });
+
+        const wardArray = Object.keys(wardCount).map((wardName) => ({
+          name: wardName,
+          pendingComplaints: wardCount[wardName],
+        }));
+
+        setWardData(wardArray);
+      };
+      fetchWardData();
+    }, [complaints]);
 
   const assignOfficer = async (complaint_id, officer_id, officer_name) => {
     try {
@@ -136,80 +175,136 @@ function Page() {
   });
 
   return (
-    <div className="bg-primary-light min-h-screen px-0">
+    <div className="bg-primary-light min-h-screen px-0  p-4">
       <main className="w-full px-4 sm:px-6 lg:px-8">
         {/* Welcome Section */}
         {showWelcome && (
-          <section className="bg-secondary shadow-md rounded-lg p-6 mb-6 relative">
+          <section className="bg-gradient-to-r from-secondary to-primary shadow-lg rounded-xl p-6 mb-6 relative overflow-hidden animate-fadeIn">
+            {/* Decorative elements */}
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-200 rounded-full opacity-20"></div>
+            <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-indigo-200 rounded-full opacity-20"></div>
+
             <button
               onClick={() => setShowWelcome(false)}
-              className="absolute top-2 right-2 text-primary-dark hover:text-red-600 text-xl font-bold"
+              className="absolute top-3 right-3 text-black hover:text-red-500 text-xl font-bold transition-all duration-200 hover:scale-110"
               aria-label="Close Welcome Section"
             >
               &times;
             </button>
-            <h2 className="text-xl md:text-2xl font-semibold text-primary-dark mb-2 text-center md:text-left">
-              Welcome to the Admin Dashboard
-            </h2>
-            <p className="text-secondary-dark">
-              Monitor complaints, manage users, and analyze reports efficiently.
-            </p>
+
+            <div className="relative z-10">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3 text-center md:text-left">
+                Welcome to the{" "}
+                <span className="text-primary">Admin Dashboard</span>
+              </h2>
+              <p className="text-gray-600 mb-4 max-w-2xl">
+                Monitor complaints, manage users, and analyze reports
+                efficiently. Get started by exploring the powerful tools below.
+              </p>
+
+              <div className="flex flex-wrap gap-3 mt-4">
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm animate-bounce delay-200">
+                  Real-time Data
+                </span>
+                <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm animate-bounce delay-300">
+                  Analytics
+                </span>
+              </div>
+            </div>
           </section>
         )}
 
         {/* Complaints by Ward Section */}
-        <section className="bg-[#F8E7D2] shadow-md rounded-lg p-4 md:p-6 mb-6">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-            {/* Left Side - Heading */}
-            <div className="lg:w-1/2 flex items-center justify-center lg:justify-start text-center lg:text-left mb-4 lg:mb-0">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 lg:ml-4">
-                Complaints Pending <br className="hidden sm:block" />
-                in Each Ward
-              </h1>
-            </div>
+        <section className="bg-gradient-to-br from-amber-50 to-orange-50 shadow-xl rounded-2xl p-6 mb-8 overflow-hidden relative">
+          {/* Decorative elements */}
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-amber-100 rounded-full opacity-20"></div>
+          <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-orange-100 rounded-full opacity-20"></div>
 
-            {/* Right Side - Doughnut Chart */}
-            <div className="lg:w-1/2 flex justify-center">
-              <div className="w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] lg:w-[320px] lg:h-[320px]">
-                <Doughnut
-                  data={{
-                    labels: wardData.map((ward) => `Ward ${ward.name}`),
-                    datasets: [
-                      {
-                        label: "Pending Complaints",
-                        data: wardData.map((ward) => ward.pendingComplaints),
-                        backgroundColor: [
-                          "#ff6384",
-                          "#36a2eb",
-                          "#ffcd56",
-                          "#4bc0c0",
-                          "#9966ff",
-                        ],
-                        borderColor: "#fff",
-                        borderWidth: 2,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: "bottom",
-                        labels: {
-                          color: "#333",
-                          font: { size: 14 },
+          <div className="relative z-10">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+              {/* Left Side - Heading */}
+              <div className="lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left animate-slideInLeft ml-12">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 leading-tight mb-3">
+                  Complaints Pending <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">
+                    in Each Ward
+                  </span>
+                </h1>
+                <p className="text-gray-600 mb-4 max-w-md ">
+                  Track unresolved issues across different wards with
+                  interactive visualization.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {wardData.slice(0, 3).map((ward, index) => (
+                    <span
+                      key={ward.name}
+                      className="px-3 py-1 bg-white/80 backdrop-blur-sm text-amber-800 rounded-full text-sm shadow-sm transition-all hover:scale-105"
+                      style={{
+                        animation: `fadeInUp 0.5s ease-out ${
+                          index * 0.1
+                        }s forwards`,
+                        opacity: 0,
+                      }}
+                    >
+                      Ward {ward.name}: {ward.pendingComplaints}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Side - Doughnut Chart */}
+              <div className="lg:w-1/2 flex justify-center animate-slideInRight">
+                <div className="w-[280px] h-[280px] sm:w-[320px] sm:h-[320px] relative">
+                  <div className="absolute inset-0 bg-white/30 rounded-full scale-90 animate-pulse-slow"></div>
+                  <Doughnut
+                    data={{
+                      labels: wardData.map((ward) => `Ward ${ward.name}`),
+                      datasets: [
+                        {
+                          label: "Pending Complaints",
+                          data: wardData.map((ward) => ward.pendingComplaints),
+                          backgroundColor: generateWardColors(wardData.length),
+                          borderColor: "white",
+                          borderWidth: 3,
+                          hoverBorderWidth: 4,
+                          hoverOffset: 10,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      cutout: "65%",
+                      plugins: {
+                        legend: {
+                          position: "bottom",
+                          labels: {
+                            color: "#555",
+                            font: {
+                              size: 13,
+                              family: "'Inter', sans-serif",
+                            },
+                            padding: 20,
+                            usePointStyle: true,
+                          },
+                        },
+                        tooltip: {
+                          backgroundColor: "rgba(0,0,0,0.8)",
+                          titleFont: { size: 14 },
+                          bodyFont: { size: 13 },
+                          callbacks: {
+                            label: (tooltipItem) =>
+                              `${tooltipItem.label}: ${tooltipItem.raw} complaints`,
+                          },
                         },
                       },
-                      tooltip: {
-                        callbacks: {
-                          label: (tooltipItem) =>
-                            `${tooltipItem.label}: ${tooltipItem.raw} complaints`,
-                        },
+                      animation: {
+                        animateScale: true,
+                        animateRotate: true,
                       },
-                    },
-                  }}
-                />
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -509,201 +604,142 @@ function Page() {
         </section>
 
         {/* Reports Summary Section */}
-        <section className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 md:p-8 lg:p-10 mb-10 sm:mb-14 shadow-lg border border-gray-100 overflow-hidden">
+        <section className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 md:p-8 mb-8 shadow-lg border border-gray-100 overflow-hidden relative animate-fadeIn">
           {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-teal-100 opacity-20 rounded-full -mr-16 -mt-16"></div>
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-100 opacity-20 rounded-full -ml-20 -mb-20"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-teal-100 opacity-10 rounded-full -mr-16 -mt-16 animate-float-slow"></div>
+          <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-100 opacity-10 rounded-full -ml-20 -mb-20 animate-float"></div>
 
-          <div className="relative flex flex-col lg:flex-row justify-between items-center gap-8 lg:gap-12">
+          <div className="relative flex flex-col lg:flex-row justify-between items-center gap-8">
             {/* Left Side - Heading and Summary */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-3">
-                Reports & Analytics
+            <div className="w-full lg:w-1/2 flex flex-col justify-center items-center lg:items-start text-center lg:text-left animate-slideInLeft">
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-accent to-orange-700">
+                  Reports Overview
+                </span>
               </h2>
               <p className="text-gray-500 mb-6 max-w-md">
-                Comprehensive overview of all complaints and their current
-                status
+                Real-time insights into complaint resolution progress
               </p>
-
-              {/* Summary Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-md">
-                <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
-                  <p className="text-xs text-gray-500 font-medium">
-                    Total Complaints
-                  </p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {reportData.total}
-                  </p>
-                </div>
-                <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
-                  <p className="text-xs text-gray-500 font-medium">
-                    Avg. Resolution
-                  </p>
-                  <p className="text-2xl font-bold text-gray-800">3.2d</p>
-                </div>
-                <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
-                  <p className="text-xs text-gray-500 font-medium">
-                    This Month
-                  </p>
-                  <p className="text-2xl font-bold text-gray-800">+24%</p>
-                </div>
-              </div>
             </div>
 
             {/* Right Side - Circular Stats */}
-            <div className="w-full lg:w-1/2 flex justify-center items-center">
-              <div className="relative flex flex-row flex-wrap justify-center items-center gap-4 sm:gap-6">
+            <div className="w-full lg:w-1/2 flex justify-center items-center animate-slideInRight">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 {/* Pending */}
-                <div className="relative">
+                <div className="relative group">
                   <div
-                    className="flex flex-col items-center justify-center bg-white p-2 rounded-full shadow-lg border-4 border-red-400"
-                    style={{ width: "11rem", height: "11rem" }}
+                    className="flex flex-col items-center justify-center bg-white p-2 rounded-full shadow-sm border-[25px] border-red-300 transition-all duration-300 group-hover:border-red-400 group-hover:shadow-md"
+                    style={{ width: "12rem", height: "12rem" }}
                   >
-                    <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center shadow-md">
-                      {Math.round(
-                        (reportData.pending / reportData.total) * 100
-                      )}
-                      %
-                    </div>
-                    <span className="text-sm font-semibold text-gray-600 mb-1">
+                    <span className="text-xs font-medium text-gray-500 mb-1">
                       Pending
                     </span>
-                    <p className="text-3xl font-bold text-red-500">
+                    <p className="text-2xl font-bold text-red-500">
                       {reportData.pending}
                     </p>
-                  </div>
-                  <div className="absolute -bottom-4 left-0 right-0 mx-auto w-3/4 h-2 bg-red-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-red-400"
-                      style={{
-                        width: `${
-                          (reportData.pending / reportData.total) * 100
-                        }%`,
-                      }}
-                    ></div>
+                    <div className="absolute bottom-0 left-0 right-0 mx-auto w-3/4 h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full transition-all duration-1000 ease-out"
+                        style={{
+                          width: `${
+                            (reportData.pending / reportData.total) * 100
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
 
                 {/* In Progress */}
-                <div className="relative">
+                <div className="relative group">
                   <div
-                    className="flex flex-col items-center justify-center bg-white p-2 rounded-full shadow-lg border-4 border-yellow-400"
-                    style={{ width: "11rem", height: "11rem" }}
+                    className="flex flex-col items-center justify-center bg-white p-2 rounded-full shadow-sm border-[25px] border-amber-300 transition-all duration-300 group-hover:border-amber-400 group-hover:shadow-md"
+                    style={{ width: "12rem", height: "12rem" }}
                   >
-                    <div className="absolute -top-2 -right-2 bg-yellow-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center shadow-md">
-                      {Math.round(
-                        (reportData.inProgress / reportData.total) * 100
-                      )}
-                      %
-                    </div>
-                    <span className="text-sm font-semibold text-gray-600 mb-1">
+                    <span className="text-xs font-medium text-gray-500 mb-1">
                       In Progress
                     </span>
-                    <p className="text-3xl font-bold text-yellow-500">
+                    <p className="text-2xl font-bold text-amber-500">
                       {reportData.inProgress}
                     </p>
-                  </div>
-                  <div className="absolute -bottom-4 left-0 right-0 mx-auto w-3/4 h-2 bg-yellow-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-yellow-400"
-                      style={{
-                        width: `${
-                          (reportData.inProgress / reportData.total) * 100
-                        }%`,
-                      }}
-                    ></div>
+                    <div className="left-0 right-0 mx-auto w-3/4 h-1.5  rounded-full overflow-hidden">
+                      <div
+                        className="h-full transition-all duration-1000 ease-out"
+                        style={{
+                          width: `${
+                            (reportData.inProgress / reportData.total) * 100
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Resolved */}
-                <div className="relative">
+                <div className="relative group">
                   <div
-                    className="flex flex-col items-center justify-center bg-white p-2 rounded-full shadow-lg border-4 border-green-400"
-                    style={{ width: "11rem", height: "11rem" }}
+                    className="flex flex-col items-center justify-center bg-white p-2 rounded-full shadow-sm border-[25px] border-green-300 transition-all duration-300 group-hover:border-green-400 group-hover:shadow-md"
+                    style={{ width: "12rem", height: "12rem" }}
                   >
-                    <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center shadow-md">
-                      {Math.round(
-                        (reportData.resolved / reportData.total) * 100
-                      )}
-                      %
-                    </div>
-                    <span className="text-sm font-semibold text-gray-600 mb-1">
+                    <span className="text-xs font-medium text-gray-500 mb-1">
                       Resolved
                     </span>
-                    <p className="text-3xl font-bold text-green-500">
+                    <p className="text-2xl font-bold text-green-500">
                       {reportData.resolved}
                     </p>
-                  </div>
-                  <div className="absolute -bottom-4 left-0 right-0 mx-auto w-3/4 h-2 bg-green-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-green-400"
-                      style={{
-                        width: `${
-                          (reportData.resolved / reportData.total) * 100
-                        }%`,
-                      }}
-                    ></div>
+                    <div className="left-0 right-0 mx-auto w-3/4 h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full transition-all duration-1000 ease-out"
+                        style={{
+                          width: `${
+                            (reportData.resolved / reportData.total) * 100
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Time period selector */}
-          <div className="mt-8 flex justify-center lg:justify-end">
-            <div className="inline-flex rounded-md shadow-sm" role="group">
-              <button
-                type="button"
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-teal-500"
-              >
-                Weekly
-              </button>
-              <button
-                type="button"
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border-t border-b border-gray-200 hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-teal-500"
-              >
-                Monthly
-              </button>
-              <button
-                type="button"
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-r-lg hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-teal-500"
-              >
-                Yearly
-              </button>
             </div>
           </div>
         </section>
 
         {/* Generate Reports Section */}
-        <section className="bg-gradient-to-br from-amber-50 to-orange-50 py-8 sm:py-12 px-6 sm:px-10 rounded-2xl shadow-lg border border-orange-100 w-full mb-10 sm:mb-16">
-          <div className="max-w-4xl mx-auto">
+        <section className="bg-gradient-to-br from-amber-50 to-orange-50 py-12 sm:py-16 px-6 sm:px-10 rounded-3xl shadow-xl border border-orange-100/50 w-full mb-12 sm:mb-20 relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-200/20 rounded-full -mt-16 -mr-16"></div>
+          <div className="absolute bottom-0 left-0 w-40 h-40 bg-orange-200/20 rounded-full -mb-20 -ml-20"></div>
+
+          <div className="max-w-4xl mx-auto relative z-10">
             {/* Header with decorative elements */}
-            <div className="text-center mb-8 sm:mb-12 relative">
-              <div className="absolute -top-2 -left-4 w-8 h-8 rounded-full bg-amber-200 opacity-30"></div>
-              <div className="absolute -bottom-4 -right-4 w-10 h-10 rounded-full bg-orange-200 opacity-30"></div>
-              <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 relative z-10">
-                Generate <span className="text-primary">Reports</span>
+            <div className="text-center mb-10 sm:mb-14 relative">
+              <div className="absolute -top-2 -left-4 w-8 h-8 rounded-full bg-amber-200/40 animate-pulse"></div>
+              <div className="absolute -bottom-4 -right-4 w-10 h-10 rounded-full bg-orange-200/40 animate-pulse delay-300"></div>
+              <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 relative z-10">
+                Generate{" "}
+                <span className="text-transparent bg-clip-text bg-primary">
+                  Reports
+                </span>
               </h3>
-              <p className="mt-2 text-sm sm:text-base text-gray-600 max-w-lg mx-auto">
-                Download detailed reports for any date range in CSV or PDF
-                format
+              <p className="mt-3 text-sm sm:text-base text-gray-600 max-w-lg mx-auto">
+                Download detailed reports for any date range in multiple formats
               </p>
             </div>
 
             {/* Date selection and download */}
-            <div className="bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-orange-50">
-              <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-end">
+            <div className="bg-white/90 backdrop-blur-sm p-6 sm:p-8 rounded-2xl shadow-md border border-orange-100/50 transition-all duration-300 hover:shadow-lg">
+              <div className="flex flex-col md:flex-row gap-5 md:gap-7 items-end">
                 {/* Date inputs container */}
-                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-5 w-full">
                   {/* Start Date */}
                   <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Start Date
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg
-                          className="h-5 w-5 text-gray-400"
+                          className="h-5 w-5 text-secondary"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -718,20 +754,20 @@ function Page() {
                       </div>
                       <input
                         type="date"
-                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-secondary focus:border-primary transition duration-150"
+                        className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-secondary transition duration-200 bg-white/80 hover:border-secondary"
                       />
                     </div>
                   </div>
 
                   {/* End Date */}
                   <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       End Date
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg
-                          className="h-5 w-5 text-gray-400"
+                          className="h-5 w-5 text-secondary"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -746,7 +782,7 @@ function Page() {
                       </div>
                       <input
                         type="date"
-                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-secondary focus:border-primary transition duration-150"
+                        className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-secondary transition duration-200 bg-white/80 hover:border-secondary"
                       />
                     </div>
                   </div>
@@ -754,9 +790,9 @@ function Page() {
 
                 {/* Download button with dropdown */}
                 <div className="w-full md:w-auto relative group">
-                  <button className="inline-flex items-center justify-center w-full md:w-auto px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-gradient-to-r from-secondary to-primary hover:from-primary hover:to-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 transform group-hover:scale-[1.02]">
+                  <button className="inline-flex items-center justify-center w-full md:w-auto px-7 py-3.5 border border-transparent text-base font-medium rounded-xl shadow-lg text-white bg-gradient-to-r from-primary to-secondary hover:from-primary hover:to-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-300 transition-all duration-200 transform group-hover:scale-[1.02] hover:shadow-md">
                     <svg
-                      className="-ml-1 mr-2 h-5 w-5"
+                      className="-ml-1 mr-3 h-5 w-5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -769,15 +805,28 @@ function Page() {
                       />
                     </svg>
                     Generate Report
+                    <svg
+                      className="ml-2 -mr-1 h-4 w-4 transition-transform duration-200 group-hover:translate-y-0.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
                   </button>
 
                   {/* Format dropdown (appears on hover) */}
-                  <div className="absolute z-10 left-0 md:left-auto md:right-0 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-1 group-hover:translate-y-0">
-                    <div className="py-1">
-                      <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-primary transition">
-                        <div className="flex items-center">
+                  <div className="absolute z-10 left-0 md:left-auto md:right-0 mt-2 w-44 origin-top-right rounded-xl bg-white shadow-xl ring-1 ring-gray-500 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-1 group-hover:translate-y-0">
+                    <div className="py-1.5">
+                      <button className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition flex items-center group">
+                        <div className="p-1.5 mr-3 rounded-lg bg-amber-100 group-hover:bg-amber-200 transition">
                           <svg
-                            className="mr-2 h-4 w-4 text-gray-500"
+                            className="h-4 w-4 text-amber-600"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -789,13 +838,18 @@ function Page() {
                               d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                             />
                           </svg>
-                          PDF Format
+                        </div>
+                        <div>
+                          <div className="font-medium">PDF Format</div>
+                          <div className="text-xs text-gray-400">
+                            Print-ready
+                          </div>
                         </div>
                       </button>
-                      <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-primary transition">
-                        <div className="flex items-center">
+                      <button className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition flex items-center group">
+                        <div className="p-1.5 mr-3 rounded-lg bg-orange-100 group-hover:bg-orange-200 transition">
                           <svg
-                            className="mr-2 h-4 w-4 text-gray-500"
+                            className="h-4 w-4 text-orange-600"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -807,7 +861,12 @@ function Page() {
                               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                             />
                           </svg>
-                          CSV Format
+                        </div>
+                        <div>
+                          <div className="font-medium">CSV Format</div>
+                          <div className="text-xs text-gray-400">
+                            Spreadsheet data
+                          </div>
                         </div>
                       </button>
                     </div>
@@ -816,12 +875,14 @@ function Page() {
               </div>
             </div>
 
-            {/* Optional: Recent reports section */}
-            <div className="mt-6 text-center">
-              <button className="text-sm text-secondary hover:text-primary font-medium inline-flex items-center transition">
-                View recent reports
+            {/* Recent reports section */}
+            <div className="mt-8 text-center">
+              <button className="text-sm font-medium inline-flex items-center group transition">
+                <span className="text-secondary group-hover:text-primary transition">
+                  View recent reports
+                </span>
                 <svg
-                  className="ml-1 h-4 w-4"
+                  className="ml-2 h-4 w-4 text-secondary group-hover:text-primary group-hover:translate-x-1 transition-transform"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
