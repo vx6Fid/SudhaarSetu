@@ -1,10 +1,9 @@
-import React, { useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { FiArrowLeft } from "react-icons/fi";
+import { FiArrowLeft, FiEdit2 } from "react-icons/fi";
 import { TbLockPassword } from "react-icons/tb";
 import { AiOutlineLogout } from "react-icons/ai";
-import { FiEdit2 } from "react-icons/fi";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 
 const fadeIn = {
@@ -22,103 +21,59 @@ function ViewProfile({ userDet }) {
     window.location.href = "/login";
   };
 
-  const role = localStorage.getItem('userRole');
-  
-  // Create moving dots background
-  useEffect(() => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.style.position = 'fixed';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.width = '100vw';
-    canvas.style.height = '100vh';
-    canvas.style.zIndex = '-1';
-    canvas.style.opacity = '0.3';
-    document.body.appendChild(canvas);
-
-    // Set canvas size
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    // Dot parameters
-    const dots = [];
-    const dotCount = Math.floor((canvas.width * canvas.height) / 10000);
-    const colors = ['FF9356', '#48A366', '#6366F1', '#EC4899'];
-
-    // Create dots
-    for (let i = 0; i < dotCount; i++) {
-      dots.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 3 + 1,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        speed: Math.random() * 0.5 + 0.1,
-        angle: Math.random() * Math.PI * 2
-      });
-    }
-
-    // Animation loop
-    let animationId;
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      dots.forEach(dot => {
-        // Update position
-        dot.x += Math.cos(dot.angle) * dot.speed;
-        dot.y += Math.sin(dot.angle) * dot.speed;
-        
-        // Bounce off edges
-        if (dot.x < 0 || dot.x > canvas.width) dot.angle = Math.PI - dot.angle;
-        if (dot.y < 0 || dot.y > canvas.height) dot.angle = -dot.angle;
-        
-        // Draw dot
-        ctx.fillStyle = dot.color;
-        ctx.beginPath();
-        ctx.arc(dot.x, dot.y, dot.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      
-      animationId = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    // Handle resize
-    const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      cancelAnimationFrame(animationId);
-      window.removeEventListener('resize', handleResize);
-      document.body.removeChild(canvas);
-    };
-  }, []);
+  const role = localStorage.getItem("userRole");
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 1 }}
       className="min-h-screen text-gray-800 w-full overflow-hidden relative pl-6 pr-6 mt-0"
     >
+      {/* Floating bubbles background */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {[...Array(15)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{
+              y: Math.random() * 800,
+              x: Math.random() * 800,
+              opacity: 0.3 + Math.random() * 0.5,
+              scale: 0.5 + Math.random() * 0.5,
+            }}
+            animate={{
+              y: [0, -200 - Math.random() * 300],
+              x: ["0%", `${Math.random() * 50 - 25}%`],
+            }}
+            transition={{
+              duration: 20 + Math.random() * 10,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: Math.random() * 5,
+            }}
+            className="absolute w-3 h-3 bg-primary rounded-full blur-sm"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+            }}
+          />
+        ))}
+      </div>
+
       {/* Header Section */}
-      <motion.div 
+      <motion.div
         initial={{ y: -50 }}
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 100 }}
         className="relative bg-gradient-to-br from-secondary to-primary h-52 flex items-center rounded-b-3xl px-6 justify-center shadow-xl"
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent rounded-b-3xl"></div>
-        <motion.button 
+        <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           className="absolute left-6 top-6 text-white bg-white/20 p-2 rounded-full backdrop-blur-sm shadow-sm hover:bg-white/30 transition-all"
         >
-          <Link href={role=='admin' ? '/admin' : (role=='citizen' ? '/citizen' : '/field-officer')}>
+          <Link href={role === "admin" ? "/admin" : role === "citizen" ? "/citizen" : "/field-officer"}>
             <FiArrowLeft size={20} />
           </Link>
         </motion.button>
@@ -126,7 +81,7 @@ function ViewProfile({ userDet }) {
       </motion.div>
 
       {/* Profile Image */}
-      <motion.div 
+      <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", delay: 0.2 }}
@@ -142,11 +97,11 @@ function ViewProfile({ userDet }) {
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/10 rounded-full"></div>
         </div>
-        
-        <motion.button 
+
+        <motion.button
           whileHover={{ scale: 1.05, boxShadow: "0 10px 20px" }}
           whileTap={{ scale: 0.95 }}
-          className="mt-6 px-6 py-2.5 bg-primary  text-white text-sm font-medium rounded-full shadow-lg flex items-center gap-2 hover:shadow-green-300 transition-all"
+          className="mt-6 px-6 py-2.5 bg-primary text-white text-sm font-medium rounded-full shadow-lg flex items-center gap-2 hover:shadow-green-300 transition-all"
         >
           <Link href="/citizen/profile/edit" className="flex items-center gap-2">
             <FiEdit2 size={16} />
@@ -156,8 +111,8 @@ function ViewProfile({ userDet }) {
       </motion.div>
 
       {/* Profile Sections */}
-      <div className="px-6 pb-20 mt-8 space-y-8 max-w-2xl mx-auto">
-        {/* Personal Information Section */}
+      <div className="px-6 pb-20 mt-8 space-y-8 max-w-2xl mx-auto relative z-10">
+        {/* Personal Info */}
         <motion.div
           variants={fadeIn}
           initial="hidden"
@@ -165,11 +120,7 @@ function ViewProfile({ userDet }) {
           transition={{ delay: 0.3 }}
           className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100/80 backdrop-blur-sm bg-white/80"
         >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-1.5 h-8 bg-gradient-to-b from-primary to-secondary rounded-full"></div>
-            <h3 className="text-xl font-bold text-gray-800 tracking-tight">Personal Information</h3>
-          </div>
-          
+          <SectionHeader title="Personal Information" />
           <div className="space-y-5">
             <ProfileField label="Name" value={userDet.name || "N/A"} />
             <ProfileField label="Email" value={userDet.email || "N/A"} />
@@ -180,7 +131,7 @@ function ViewProfile({ userDet }) {
           </div>
         </motion.div>
 
-        {/* Account Information Section */}
+        {/* Account Info */}
         <motion.div
           variants={fadeIn}
           initial="hidden"
@@ -188,19 +139,12 @@ function ViewProfile({ userDet }) {
           transition={{ delay: 0.4 }}
           className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100/80 backdrop-blur-sm bg-white/80"
         >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-1.5 h-8 bg-gradient-to-b from-primary to-secondary rounded-full"></div>
-            <h3 className="text-xl font-bold text-gray-800 tracking-tight">Account Information</h3>
-          </div>
-          
+          <SectionHeader title="Account Information" />
           <div className="space-y-5">
             <ProfileField label="User ID" value={userDet.id || "N/A"} />
-            <ProfileField 
-              label="Account Type" 
-              value={userDet.role.charAt(0).toUpperCase() + userDet.role.slice(1)} 
-            />
-            <ProfileField 
-              label="Registration Date" 
+            <ProfileField label="Account Type" value={userDet.role.charAt(0).toUpperCase() + userDet.role.slice(1)} />
+            <ProfileField
+              label="Registration Date"
               value={
                 userDet.created_at
                   ? new Date(userDet.created_at).toLocaleDateString("en-US", {
@@ -209,7 +153,7 @@ function ViewProfile({ userDet }) {
                       day: "numeric",
                     })
                   : "N/A"
-              } 
+              }
             />
             <div className="flex items-center gap-2 text-emerald-600 mt-3">
               <IoMdCheckmarkCircleOutline size={22} className="text-emerald-500" />
@@ -226,14 +170,10 @@ function ViewProfile({ userDet }) {
           transition={{ delay: 0.5 }}
           className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100/80 backdrop-blur-sm bg-white/80"
         >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-1.5 h-8 bg-gradient-to-b from-primary to-secondary rounded-full"></div>
-            <h3 className="text-xl font-bold text-gray-800 tracking-tight">Security</h3>
-          </div>
-          
+          <SectionHeader title="Security" />
           <div className="space-y-4">
             <Link href="/change-password">
-              <motion.button 
+              <motion.button
                 whileHover={{ x: 5 }}
                 className="w-full flex items-center justify-between py-3.5 px-5 rounded-xl hover:bg-gray-50 transition-all group"
               >
@@ -250,8 +190,8 @@ function ViewProfile({ userDet }) {
                 </div>
               </motion.button>
             </Link>
-            
-            <motion.button 
+
+            <motion.button
               onClick={handleLogout}
               whileHover={{ x: 5 }}
               className="w-full flex items-center justify-between py-3.5 px-5 rounded-xl hover:bg-gray-50 transition-all group text-red-500"
@@ -280,6 +220,14 @@ const ProfileField = ({ label, value }) => (
   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-6">
     <span className="text-gray-500 font-medium min-w-[140px] text-sm tracking-wide">{label}</span>
     <span className="text-gray-800 font-medium break-all text-base">{value}</span>
+  </div>
+);
+
+// Reusable Section Header
+const SectionHeader = ({ title }) => (
+  <div className="flex items-center gap-3 mb-6">
+    <div className="w-1.5 h-8 bg-gradient-to-b from-primary to-secondary rounded-full"></div>
+    <h3 className="text-xl font-bold text-gray-800 tracking-tight">{title}</h3>
   </div>
 );
 
