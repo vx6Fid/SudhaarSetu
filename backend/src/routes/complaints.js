@@ -12,10 +12,24 @@ const upload = multer();
 
 // Create-Complaint
 router.post("/complaint", authMiddleware, async (req, res) => {
-  const { category, location, image, ward_no, city, state } = req.body;
-  const user_id = req.user?.user;
+  const { user_id, category, location, image, ward_no, city, state, org_name } =
+    req.body;
+  const orgName = req.user?.org_name || org_name;
 
   try {
+    if (!user_id) {
+      return res.status(400).json({
+        error: "User ID is not present",
+      });
+    }
+
+    // Corrected organization name check
+    if (!orgName) {
+      return res.status(400).json({
+        error: "Organization Name is not present",
+      });
+    }
+
     // Check for duplicate complaints (same location & category)
     const duplicateCheck = await pool.query(
       "SELECT * FROM complaints WHERE category = $1 AND location = $2 AND ward_no = $3 AND city = $4 AND status IN ('pending', 'in_progress')",
@@ -23,32 +37,27 @@ router.post("/complaint", authMiddleware, async (req, res) => {
     );
 
     if (duplicateCheck.rows.length > 0) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "A complaint already exists for this issue in the same location.",
-        });
+      return res.status(400).json({
+        error: "A complaint already exists for this issue.",
+      });
     }
 
-    // Insert Complaint (Corrected)
+    // Insert Complaint
     const newComplaint = await pool.query(
       `INSERT INTO complaints 
-            (user_id, category, location, image, status, ward_no, city, "State", upvotes, views, total_comments, comments) 
-            VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, 0, 0, 0, NULL::UUID) 
+            (user_id, category, location, image, status, ward_no, city, "State", upvotes, views, total_comments, comments, org_name) 
+            VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, 0, 0, 0, NULL::UUID, $8) 
             RETURNING *`,
-      [user_id, category, location, image, ward_no, city, state]
+      [user_id, category, location, image, ward_no, city, state, orgName]
     );
 
-    res
-      .status(201)
-      .json({
-        message: "Complaint created successfully",
-        complaint: newComplaint.rows[0],
-      });
+    res.status(201).json({
+      message: "Complaint created successfully",
+      complaint: newComplaint.rows[0],
+    });
   } catch (err) {
     console.error("Database Insert Error:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
@@ -83,11 +92,9 @@ router.put(
           .json({ error: "Complaint must move to 'in_progress' first." });
       }
       if (currentStatus === "in_progress" && status !== "resolved") {
-        return res
-          .status(400)
-          .json({
-            error: "Complaint must move to 'resolved' from 'in_progress' only.",
-          });
+        return res.status(400).json({
+          error: "Complaint must move to 'resolved' from 'in_progress' only.",
+        });
       }
 
       let proofImageUrl = null;
@@ -147,11 +154,9 @@ router.put(
 
       // Ensure complaint is not already assigned
       if (complaint.rows[0].assigned_officer) {
-        return res
-          .status(400)
-          .json({
-            error: "Complaint is already assigned to another field officer.",
-          });
+        return res.status(400).json({
+          error: "Complaint is already assigned to another field officer.",
+        });
       }
 
       // Assign the field officer
@@ -264,8 +269,7 @@ router.get("/user/liked-complaints", async (req, res) => {
   }
 
   try {
-    const query =
-      "SELECT * FROM complaint_upvotes WHERE user_id = $1";
+    const query = "SELECT * FROM complaint_upvotes WHERE user_id = $1";
     const result = await pool.query(query, [user_id]);
 
     res.json({ likedComplaints: result.rows });
@@ -273,10 +277,9 @@ router.get("/user/liked-complaints", async (req, res) => {
     console.error("Error fetching liked complaints:", error);
     res.status(500).json({ error: error.message });
   }
-}
-);
+});
 
-// Fetch comments on a complaint 
+// Fetch comments on a complaint
 router.get("/complaint/:id/comments", async (req, res) => {
   const complaintId = req.params.id;
   if (!complaintId) {

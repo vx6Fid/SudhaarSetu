@@ -19,8 +19,8 @@ function LoginPage() {
     setLoading(true);
 
     const loginUrl = officerRoles.has(role)
-      ? (role === 'admin' ? "/api/admin/login" : "/api/officer/login")
-      : "/api/auth/login";
+      ? (role === 'admin' ? "/api/auth/admin/login" : "/api/officer/login")
+      : "/api/auth/user/login";
 
     try {
       const response = await fetch(`${BASE_URL}${loginUrl}`, {
