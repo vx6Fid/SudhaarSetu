@@ -235,9 +235,9 @@ function Page() {
           <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-orange-100 rounded-full opacity-20"></div>
 
           <div className="relative z-10">
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-8 ">
               {/* Left Side - Heading */}
-              <div className="lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left animate-slideInLeft ml-12">
+              <div className="lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left animate-slideInLeft md:ml-12">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 leading-tight mb-3">
                   Complaints Pending <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">
@@ -625,7 +625,7 @@ function Page() {
 
           <div className="relative flex flex-col lg:flex-row justify-between items-center gap-8">
             {/* Left Side - Heading and Summary */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center items-center lg:items-start text-center lg:text-left animate-slideInLeft">
+            <div className="w-full lg:w-1/2 flex flex-col justify-center items-center lg:items-start text-center lg:text-left animate-slideInLeft  md:ml-10">
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-accent to-orange-700">
                   Reports Overview
@@ -638,7 +638,7 @@ function Page() {
 
             {/* Right Side - Circular Stats */}
             <div className="w-full lg:w-1/2 flex justify-center items-center animate-slideInRight">
-              <div className="grid grid-cols-3 gap-2 sm:gap-4">
+              <div className="flex flex-col sm:grid sm:grid-cols-3 gap-y-6 sm:gap-4 items-center">
                 {/* Pending */}
                 <div className="relative group">
                   <div

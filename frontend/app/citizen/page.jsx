@@ -133,7 +133,7 @@ function Page() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="relative bg-gradient-to-r from-secondary to-green-800 text-white p-5 rounded-2xl mb-8 shadow-lg overflow-hidden"
+              className="relative m-5 bg-gradient-to-r from-secondary to-green-800 text-white p-5 rounded-2xl mb-8 shadow-lg overflow-hidden"
             >
               <div className="relative z-10 flex flex-col md:flex-row items-center justify-between">
                 <div className="flex items-center space-x-4">
@@ -191,7 +191,7 @@ function Page() {
           variants={filterVariants}
           initial="hidden"
           animate="visible"
-          className="bg-[#F8E7D2] p-6 rounded-2xl shadow-md border border-gray-100 mb-8"
+          className="bg-[#F8E7D2] m-5 p-6 rounded-2xl shadow-md border border-gray-100 mb-8"
         >
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <motion.h2

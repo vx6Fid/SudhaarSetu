@@ -313,16 +313,16 @@ function ManageFieldOfficers() {
       {/* Officer Detail Card */}
       {selectedOfficer && selectedOfficer.id && (
         <section className="max-w-4xl mx-auto mb-8 animate-fade-in-up relative">
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover-scale transition-all duration-300">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg overflow-hidden hover-scale transition-all duration-300">
             {/* Close Button */}
             <button
               onClick={() => setSelectedOfficer({})}
-              className="absolute top-4 right-4 z-10 pr-1 rounded-full hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+              className="absolute top-3 sm:top-4 right-3 sm:right-4 z-10 p-1 sm:p-0 rounded-full hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
               aria-label="Close officer details"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-gray-500 hover:text-gray-700"
+                className="h-5 w-5 sm:h-6 sm:w-6 text-gray-500 hover:text-gray-700"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -336,13 +336,13 @@ function ManageFieldOfficers() {
               </svg>
             </button>
 
-            <div className="p-6 md:p-8">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center">
+            <div className="p-4 sm:p-6 md:p-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                <div className="w-full">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 flex items-center">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-6 w-6 mr-2 text-indigo-600"
+                      className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-indigo-600"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -357,30 +357,30 @@ function ManageFieldOfficers() {
                     Officer Details
                   </h3>
                   <div className="space-y-2 text-gray-600">
-                    <p className="flex items-center">
-                      <span className="font-medium w-20">ID:</span>
-                      <span className="bg-green-100 text-primary px-2 py-1 rounded text-sm font-mono">
+                    <p className="flex flex-col xs:flex-row items-start xs:items-center gap-1 xs:gap-0">
+                      <span className="font-medium w-16 sm:w-20">ID:</span>
+                      <span className="bg-green-100 text-primary px-2 py-1 rounded text-xs sm:text-sm font-mono">
                         {selectedOfficer.id}
                       </span>
                     </p>
-                    <p className="flex items-center">
-                      <span className="font-medium w-20">Name:</span>
+                    <p className="flex flex-col xs:flex-row items-start xs:items-center gap-1 xs:gap-0">
+                      <span className="font-medium w-16 sm:w-20">Name:</span>
                       <span className="text-gray-800">
                         {selectedOfficer.name}
                       </span>
                     </p>
-                    <p className="flex items-center">
-                      <span className="font-medium w-20">Ward:</span>
-                      <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-sm font-medium">
+                    <p className="flex flex-col xs:flex-row items-start xs:items-center gap-1 xs:gap-0">
+                      <span className="font-medium w-16 sm:w-20">Ward:</span>
+                      <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-xs sm:text-sm font-medium">
                         Ward {selectedOfficer.ward}
                       </span>
                     </p>
                   </div>
                 </div>
 
-                <div className="flex flex-col items-end">
+                <div className="w-full sm:w-auto flex flex-col items-start sm:items-end mt-2 sm:mt-0">
                   <span
-                    className={`inline-flex items-center px-4 py-1 mt-5 rounded-full text-sm font-medium ${
+                    className={`inline-flex items-center px-3 sm:px-4 py-1 rounded-full text-xs sm:text-sm font-medium ${
                       selectedOfficer.status === "active"
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
@@ -388,12 +388,12 @@ function ManageFieldOfficers() {
                   >
                     {selectedOfficer.status === "active" ? (
                       <>
-                        <span className="w-2 h-2 mr-2 bg-green-500 rounded-full"></span>
+                        <span className="w-2 h-2 mr-1 sm:mr-2 bg-green-500 rounded-full"></span>
                         Active
                       </>
                     ) : (
                       <>
-                        <span className="w-2 h-2 mr-2 bg-red-500 rounded-full"></span>
+                        <span className="w-2 h-2 mr-1 sm:mr-2 bg-red-500 rounded-full"></span>
                         On Leave
                       </>
                     )}
@@ -401,11 +401,11 @@ function ManageFieldOfficers() {
 
                   <button
                     onClick={() => removeOfficer(selectedOfficer.id)}
-                    className="mt-4 flex items-center justify-center px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow hover:shadow-md transition-all duration-200 hover:from-red-600 hover:to-red-700"
+                    className="mt-3 sm:mt-4 w-full sm:w-auto flex items-center justify-center px-3 sm:px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg text-sm sm:text-base shadow hover:shadow-md transition-all duration-200 hover:from-red-600 hover:to-red-700"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-1"
+                      className="h-4 w-4 sm:h-5 sm:w-5 mr-1"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
