@@ -107,7 +107,7 @@ function HeroCarousel() {
   };
 
   return (
-    <div className="relative w-full h-screen max-h-[650px] flex flex-col justify-center items-start overflow-hidden">
+    <div className="relative m-5 rounded-2xl h-screen max-h-[600px] flex flex-col justify-center items-start overflow-hidden ">
       {/* Animated gradient background */}
       <motion.div
         className="absolute inset-0"
