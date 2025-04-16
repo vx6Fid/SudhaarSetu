@@ -134,6 +134,7 @@ router.delete(
     const { id } = req.params;
 
     try {
+      // Delete the officer
       const deletedUser = await pool.query(
         "DELETE FROM officers WHERE id = $1 RETURNING *",
         [id]
@@ -143,25 +144,32 @@ router.delete(
         return res.status(404).json({ error: "User not found" });
       }
 
-      const officerCount = await pool.query(
-        "UPDATE organizations SET officer = officer - 1 WHERE admin_id= $1 RETURNING officer",
+      // Decrement officer count in the organization
+      const officerCountUpdate = await pool.query(
+        "UPDATE organizations SET officers = officers - 1 WHERE admin_id = $1 RETURNING officers",
         [req.user.id]
       );
 
-      res.json({
+      if (officerCountUpdate.rowCount === 0) {
+        return res
+          .status(400)
+          .json({ error: "Organization not found or officer count update failed" });
+      }
+
+      return res.status(200).json({
         message: "User removed successfully",
-        officerCount: officerCount.rows[0].officer,
+        officerCount: officerCountUpdate.rows[0].officer,
       });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Server error" });
+      console.error("Error removing user:", err);
+      return res.status(500).json({ error: "Server error" });
     }
   }
 );
 
 // Create Field Officer
 router.post(
-  "/admin/create-user",
+  "/admin/create-officer",
   authMiddleware,
   roleMiddleware(["admin"]),
   async (req, res) => {
@@ -254,7 +262,6 @@ router.post(
 router.post(
   "/admin/assign-field-officer",
   authMiddleware,
-  roleMiddleware(["admin"]),
   async (req, res) => {
     const { admin_id, complaint_id, field_officer_id, officerName } = req.body;
 

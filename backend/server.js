@@ -50,7 +50,7 @@ app.post("/api/upload-image", upload.single("image"), async (req, res) => {
     if (response.ok && data.status_code === 200) {
       return res.json({ imageUrl: data.image.url });
     } else {
-      return res.status(500).json({ error: "Image upload failed" });
+      return res.status(500).json({ message: "Image upload failed", error: data });
     }
   } catch (error) {
     console.error("Error uploading image:", error);

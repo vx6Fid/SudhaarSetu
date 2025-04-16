@@ -14,8 +14,6 @@ const upload = multer();
 router.post("/complaint", authMiddleware, async (req, res) => {
   const { user_id, category, location, image, ward_no, city, state, org_name } =
     req.body;
-  const orgName = req.user?.org_name || org_name;
-
   try {
     if (!user_id) {
       return res.status(400).json({
@@ -23,8 +21,7 @@ router.post("/complaint", authMiddleware, async (req, res) => {
       });
     }
 
-    // Corrected organization name check
-    if (!orgName) {
+    if (!org_name) {
       return res.status(400).json({
         error: "Organization Name is not present",
       });
@@ -48,7 +45,7 @@ router.post("/complaint", authMiddleware, async (req, res) => {
             (user_id, category, location, image, status, ward_no, city, "State", upvotes, views, total_comments, comments, org_name) 
             VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, 0, 0, 0, NULL::UUID, $8) 
             RETURNING *`,
-      [user_id, category, location, image, ward_no, city, state, orgName]
+      [user_id, category, location, image, ward_no, city, state, org_name]
     );
 
     res.status(201).json({
@@ -175,7 +172,7 @@ router.put(
 
 // Fetch complaints by ward, city, or assigned officer
 router.get("/complaints", async (req, res) => {
-  const { ward, city, officer, category, complaint_id } = req.query;
+  const { ward, city, officer, status, category, complaint_id, org_name } = req.query;
   let query = "SELECT * FROM complaints WHERE 1=1";
   const values = [];
   let count = 1; // Placeholder index
@@ -203,6 +200,16 @@ router.get("/complaints", async (req, res) => {
   if (officer) {
     query += ` AND field_officer_id = $${count}`;
     values.push(officer);
+    count++;
+  }
+  if (org_name) {
+    query += ` AND org_name = $${count}`;
+    values.push(org_name);
+    count++;
+  }
+  if (status) {
+    query += ` AND status = $${count}`;
+    values.push(status);
     count++;
   }
 

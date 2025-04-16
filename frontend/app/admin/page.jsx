@@ -9,7 +9,11 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 function Page() {
   const [complaints, setComplaints] = useState([]);
   const [wardData, setWardData] = useState([]);
-  const [reportData, setReportData] = useState({ pending: 0, resolved: 0 });
+  const [reportData, setReportData] = useState({
+    pending: 0,
+    in_progress: 0,
+    resolved: 0,
+  });
   const [showWelcome, setShowWelcome] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
@@ -41,30 +45,42 @@ function Page() {
     return matchWard && matchName;
   });
 
-  // Fetch data dynamically
+  // Fetch complaints data
   useEffect(() => {
-    // Simulate fetching complaints data
     const fetchComplaints = async () => {
-      const city = localStorage.getItem("user-city");
-      let url = new URL(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaints`
-      );
+      try {
+        const org_name = localStorage.getItem("user-org");
+        let url = new URL(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaints`
+        );
 
-      if (city) url.searchParams.append("city", city);
+        if (org_name) url.searchParams.append("org_name", org_name);
 
-      const complaintsData = await fetch(url).then((res) => res.json());
-      console.log(complaintsData.complaints);
-      setComplaints(complaintsData.complaints);
-    };
+        const complaintsData = await fetch(url).then((res) => res.json());
+        const complaints = complaintsData.complaints;
 
-    // Simulate fetching report data
-    const fetchReportData = async () => {
-      const reportData = await fetch("/api/reports").then((res) => res.json());
-      setReportData(reportData);
+        console.log(complaints);
+
+        let counts = {
+          pending: 0,
+          in_progress: 0,
+          resolved: 0,
+        };
+
+        complaints.forEach((complaint) => {
+          if (complaint.status === "pending") counts.pending++;
+          else if (complaint.status === "in_progress") counts.in_progress++;
+          else if (complaint.status === "resolved") counts.resolved++;
+        });
+
+        setReportData(counts);
+        setComplaints(complaints);
+      } catch (error) {
+        console.error("Error fetching complaints:", error);
+      }
     };
 
     fetchComplaints();
-    // fetchReportData();
   }, []);
 
   // Helper function to generate random but visually distinct colors
@@ -97,14 +113,11 @@ function Page() {
       "#80DEEA",
     ];
 
-    // Shuffle array and take first 'count' elements
     return [...colorPalette].sort(() => 0.5 - Math.random()).slice(0, count);
   };
 
-  // In your component:
   const wardColors = generateWardColors(wardData.length);
 
-  // Then in your Doughnut chart configuration:
   backgroundColor: wardColors,
     useEffect(() => {
       // Simulate fetching ward data
@@ -139,6 +152,7 @@ function Page() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           admin_id: localStorage.getItem("userId"),
@@ -195,7 +209,7 @@ function Page() {
             <div className="relative z-10">
               <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3 text-center md:text-left">
                 Welcome to the{" "}
-                <span className="text-primary">Admin Dashboard</span>
+                <span className="text-gray-50">Admin Dashboard</span>
               </h2>
               <p className="text-gray-600 mb-4 max-w-2xl">
                 Monitor complaints, manage users, and analyze reports
@@ -660,7 +674,7 @@ function Page() {
                       In Progress
                     </span>
                     <p className="text-2xl font-bold text-amber-500">
-                      {reportData.inProgress}
+                      {reportData.in_progress}
                     </p>
                     <div className="left-0 right-0 mx-auto w-3/4 h-1.5  rounded-full overflow-hidden">
                       <div

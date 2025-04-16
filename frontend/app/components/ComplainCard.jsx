@@ -7,7 +7,6 @@ import "swiper/css/pagination";
 import toast from "react-hot-toast";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { EffectCoverflow, Pagination } from "swiper/modules";
-import Image from "next/image";
 import {
   ThumbsUp,
   MessageCircle,
@@ -107,7 +106,10 @@ function ComplainCard({ complaint, isLiked }) {
         setCommentsLength(commentsLength + 1);
         toast.success("Comment added successfully");
       } else {
-        console.error("Failed to add comment:", responseData.error || responseData);
+        console.error(
+          "Failed to add comment:",
+          responseData.error || responseData
+        );
         toast.error(responseData.error || "Failed to add comment");
       }
     } catch (error) {
@@ -222,12 +224,11 @@ function ComplainCard({ complaint, isLiked }) {
               )
             ) : complaint.image ? (
               <div className="relative w-full h-[200px] sm:h-[250px] md:h-[300px]">
-                <Image
+                <img
                   src={complaint.image}
                   alt="Complaint Image"
-                  fill
-                  className="object-cover rounded-lg"
-                  priority={false}
+                  className="object-cover rounded-lg w-full h-full"
+                  loading="lazy"
                 />
               </div>
             ) : (

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import "leaflet/dist/leaflet.css";
+import Link from "next/link";
 
 function ManageFieldOfficers() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -10,7 +11,7 @@ function ManageFieldOfficers() {
   const [fieldOfficers, setFieldOfficers] = useState([]);
   const [selectedOfficer, setSelectedOfficer] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-
+  const [org_name, setOrgName] = useState("");
   const fetchOfficerDetails = async (officer_id) => {
     try {
       setIsLoading(true);
@@ -103,7 +104,7 @@ function ManageFieldOfficers() {
         setIsLoading(false);
       }
     };
-
+    setOrgName(localStorage.getItem("user-org"));
     fetchOfficers();
   }, []);
 
@@ -165,6 +166,74 @@ function ManageFieldOfficers() {
           transform: scale(1.02);
         }
       `}</style>
+
+      {/* Action Buttons to  */}
+      <div className="w-full flex justify-end mb-4 space-x-3">
+        <Link
+          href="/admin/fieldOfficer/create-officer"
+          className="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-md transition-all duration-200 font-medium text-sm flex items-center shadow-sm hover:shadow-md"
+        >
+          <svg
+            className="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
+          </svg>
+          Create Officer
+        </Link>
+
+        {!org_name ? (
+          <Link
+            href="/admin/fieldOfficer/create-organization"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-md transition-all duration-200 font-medium text-sm flex items-center shadow-sm hover:shadow-md"
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
+            </svg>
+            Create Organization
+          </Link>
+        ) : (
+          <Link
+            href="/admin/fieldOfficer/view-organization"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-md transition-all duration-200 font-medium text-sm flex items-center shadow-sm hover:shadow-md"
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
+            </svg>
+            View Organization
+          </Link>
+        )}
+      </div>
 
       {/* Header Section */}
       <header className="bg-gradient-to-r from-secondary to-primary text-white shadow-xl rounded-2xl p-6 mb-8 animate-fade-in h-full">

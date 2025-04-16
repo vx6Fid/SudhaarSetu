@@ -46,7 +46,7 @@ function LoginPage() {
       localStorage.setItem("user-name", userData?.name || "");
       localStorage.setItem("user-ward", userData?.ward || "");
       localStorage.setItem('user-city', userData.city || "");
-
+      localStorage.setItem('user-org', userData.org_name || "");
       // Redirect user based on role
       const roleRedirects = {
         citizen: "/citizen",

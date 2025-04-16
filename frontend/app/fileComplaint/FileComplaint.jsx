@@ -3,15 +3,18 @@ import { useState } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function FileComplaint() {
   const [formData, setFormData] = useState({
+    user_id: localStorage.getItem("userId"),
     category: "",
     location: "",
     image: "",
     ward_no: "",
     city: "",
     state: "",
+    org_name: localStorage.getItem("user-org"),
   });
 
   const router = useRouter();
@@ -50,7 +53,7 @@ export default function FileComplaint() {
   // Get user's current GPS location
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
+      toast.error("Geolocation is not supported by your browser.");
       return;
     }
 
@@ -63,8 +66,8 @@ export default function FileComplaint() {
           location: `${latitude}, ${longitude}`,
         }));
       },
-      (error) => {
-        alert("Unable to retrieve your location.");
+      (err) => {
+        toast.error("Unable to retrieve your location.", err);
       }
     );
   };
@@ -92,14 +95,14 @@ export default function FileComplaint() {
       if (response.ok) {
         setFormData((prev) => ({ ...prev, image: data.imageUrl }));
         console.log("Image uploaded successfully:", data.imageUrl);
-        alert("Image uploaded successfully!");
+        toast.success("Image uploaded successfully!");
       } else {
         console.log("Image upload failed:", data);
-        alert("Image upload failed. Try again.");
+        toast.error("Image upload failed. Try again.", data); // Did to only to see what is the erro in product image upload
       }
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert("Failed to upload image.");
+      toast.error("Failed to upload image.");
     } finally {
       setUploading(false);
     }
@@ -111,7 +114,7 @@ export default function FileComplaint() {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("User not authenticated");
+        toast.error("User not authenticated");
         return;
       }
 
@@ -129,7 +132,7 @@ export default function FileComplaint() {
 
       const data = await response.json();
       if (response.ok) {
-        alert("Complaint filed successfully!");
+        toast.success("Complaint filed successfully!");
         const role = localStorage.getItem("userRole");
         if (role === "citizen") {
           router.push("/citizen");
@@ -137,11 +140,11 @@ export default function FileComplaint() {
           router.push("/");
         }
       } else {
-        alert(data.error || "Something went wrong!");
+        toast.error(data.error || "Something went wrong!");
       }
     } catch (error) {
       console.error("Error filing complaint:", error);
-      alert("Failed to submit complaint.");
+      toast.error("Failed to submit complaint.");
     }
   };
 

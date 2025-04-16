@@ -21,7 +21,7 @@ function SignupPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${BASE_URL}/api/auth/signup`, {
+      const response = await fetch(`${BASE_URL}/api/auth/user/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

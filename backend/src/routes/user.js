@@ -34,26 +34,23 @@ router.get("/user", async (req, res) => {
   }
 });
 
+// Updaate User Details
 router.put("/update-user", async (req, res) => {
   const { user_id, role, name, phone, city, ward, state, email, password } =
     req.body;
 
-  // Validate required fields
   if (!user_id || !role) {
     return res.status(400).json({ error: "user_id and role are required" });
   }
 
-  // Validate role
   const validRoles = ["citizen", "admin", "field_officer"];
   if (!validRoles.includes(role)) {
     return res.status(400).json({ error: "Invalid role" });
   }
 
-  // Select the correct table
   const table =
     role === "citizen" ? "users" : role === "admin" ? "admins" : "officers";
 
-  // Prepare updates dynamically
   let updates = [];
   let values = [];
   let count = 1;
@@ -74,14 +71,13 @@ router.put("/update-user", async (req, res) => {
     count++;
   }
 
-  // Allow state, city, and ward updates **only for citizens**
   if (role === "citizen") {
     if (city) {
       updates.push(`city = $${count}`);
       values.push(city);
       count++;
     }
-    if (ward) {
+    if (ward !== undefined) {
       updates.push(`ward = $${count}`);
       values.push(ward || null);
       count++;
@@ -93,15 +89,19 @@ router.put("/update-user", async (req, res) => {
     }
   }
 
-  // Hash password securely
   if (password) {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Check if it looks like a bcrypt hash — then skip hashing
+    const isHashed = password.startsWith("$2b$") || password.startsWith("$2a$");
+
+    const finalPassword = isHashed
+      ? password
+      : await bcrypt.hash(password, 10);
+
     updates.push(`password = $${count}`);
-    values.push(hashedPassword);
+    values.push(finalPassword);
     count++;
   }
 
-  // Check if there are any fields to update
   if (updates.length === 0) {
     return res.status(400).json({ error: "No fields to update" });
   }
@@ -109,23 +109,20 @@ router.put("/update-user", async (req, res) => {
   values.push(user_id);
 
   try {
-    // Run the update query
     const query = `UPDATE ${table} SET ${updates.join(
       ", "
     )} WHERE id = $${count} RETURNING id, name, phone, city, ward, state, email`;
+
     const result = await pool.query(query, values);
 
-    // Handle case where user doesn't exist
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Return updated user details (excluding password)
     res.json({ message: "User updated successfully", user: result.rows[0] });
   } catch (error) {
     console.error("Update error:", error);
 
-    // Handle unique email conflict
     if (error.code === "23505") {
       return res.status(400).json({ error: "Email already in use" });
     }
@@ -244,45 +241,49 @@ router.post("/complaints/:id/comment", async (req, res) => {
   }
 });
 
-// Provide feedback on complaint
+// Submit feedback to complaint
 router.post(
   "/complaint/:complaint_id/feedback/",
   authMiddleware,
-  roleMiddleware(["citizen"]),
   async (req, res) => {
-    const { rating, feedback } = req.body;
+    const { user_id, rating, feedback } = req.body;
     const { complaint_id } = req.params;
-    const user_id = req.user.id;
 
     try {
+      if(!user_id || !complaint_id) {
+        return res
+          .status(400)
+          .json({ error: "user_id and complaint_id are required." });
+      }
       if (!rating) {
         return res
           .status(400)
           .json({ error: "Rating and feedback are required." });
       }
 
-      const feedbackData = { rating, review: feedback || "" };
+      // New feedback object
+      const feedbackEntry = {
+        userId: user_id,
+        rating,
+        review: feedback || "",
+      };
 
       const result = await pool.query(
         `UPDATE complaints
-           SET feedback = $1
-           WHERE id = $2
-           RETURNING *;`,
-        [feedbackData, complaint_id]
+         SET feedback = 
+           CASE 
+             WHEN jsonb_typeof(COALESCE(feedback, '[]'::jsonb)) = 'array' 
+             THEN COALESCE(feedback, '[]'::jsonb) || $1::jsonb
+             ELSE jsonb_build_array($1::jsonb)
+           END
+         WHERE id = $2
+         RETURNING *;`,
+        [JSON.stringify(feedbackEntry), complaint_id]
       );
 
       if (result.rows.length === 0) {
-        return res.status(404).json({
-          error: "Complaint not found or not authorized.",
-        });
+        return res.status(404).json({ error: "Complaint not found." });
       }
-
-      await pool.query(
-        `UPDATE users 
-           SET feedback = array_append(feedback, $1) 
-           WHERE id = $2 AND NOT ($1 = ANY(feedback));`,
-        [complaint_id, user_id]
-      );
 
       res.status(200).json({
         message: "Feedback submitted successfully!",
