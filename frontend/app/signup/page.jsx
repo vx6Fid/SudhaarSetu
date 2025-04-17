@@ -72,8 +72,8 @@ function SignupPage() {
   }, []);
 
   return (
-    <div className="h-screen flex items-center justify-center bg-[#F9F5EC]">
-      <div className="w-[350px] p-6">
+    <div className="h-screen flex items-center justify-center md:m-20 py-8">
+      <div className="w-[400px] p-6">
         {/* Logo */}
         <div className="flex justify-center mb-4">
           <img src="/logo.png" alt="Logo" className="h-12" />

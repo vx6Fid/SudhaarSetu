@@ -124,11 +124,11 @@ export default function FileComplaint() {
         setFormData((prev) => ({ ...prev, image: data.imageUrl }));
         toast.success("Image uploaded successfully!");
       } else {
-        toast.error(data.error || "Image upload failed.");
+        toast.error(data.error || "Image upload failed.",data.error);
       }
     } catch (error) {
-      console.error("Image upload error:", error);
-      toast.error("Failed to upload image.");
+      console.error("Image upload error:", error.message);
+      toast.error("Failed to upload image.",error.message);
     } finally {
       setUploading(false);
     }

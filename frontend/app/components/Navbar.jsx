@@ -81,7 +81,7 @@ const Navbar = () => {
                 <>
                   <Link
                     href="/signup"
-                    className="px-5 py-2 rounded-lg border-2 border-primary text-primary font-medium hover:bg-blue-50 transition-all"
+                    className="px-5 py-2 rounded-lg border-2 border-primary text-primary font-medium hover:bg-green-100 transition-all"
                   >
                     Sign Up
                   </Link>
