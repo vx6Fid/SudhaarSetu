@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -13,19 +13,34 @@ import toast from "react-hot-toast";
 
 export default function FileComplaint() {
   const [formData, setFormData] = useState({
-    user_id: typeof window !== "undefined" ? localStorage.getItem("userId") : "",
+    user_id: "",
     category: "",
     location: "",
     image: "",
     ward_no: "",
     city: "",
     state: "",
-    org_name: typeof window !== "undefined" ? localStorage.getItem("user-org") : "",
+    org_name: "",
   });
+
+  const [uploading, setUploading] = useState(false);
+  const [markerPosition, setMarkerPosition] = useState(null);
 
   const router = useRouter();
 
+  // Retrieve from localStorage on client
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setFormData((prev) => ({
+        ...prev,
+        user_id: localStorage.getItem("userId") || "",
+        org_name: localStorage.getItem("user-org") || "",
+      }));
+    }
+  }, []);
+
   const L = typeof window !== "undefined" ? require("leaflet") : null;
+
   const pinIcon = L
     ? new L.Icon({
         iconUrl: "https://cdn-icons-png.flaticon.com/512/2776/2776067.png",
@@ -35,30 +50,34 @@ export default function FileComplaint() {
       })
     : null;
 
-  const [uploading, setUploading] = useState(false);
-  const [markerPosition, setMarkerPosition] = useState(null);
-
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  function LocationMarker() {
+  const LocationMarker = () => {
     useMapEvents({
       click(e) {
         const { lat, lng } = e.latlng;
-        setMarkerPosition([lat, lng]);
+        const coords = [lat, lng];
+        setMarkerPosition(coords);
         setFormData((prev) => ({ ...prev, location: `${lat}, ${lng}` }));
       },
     });
 
-    return markerPosition ? <Marker position={markerPosition} icon={pinIcon} /> : null;
-  }
+    return markerPosition ? (
+      <Marker position={markerPosition} icon={pinIcon} />
+    ) : null;
+  };
 
-  function FlyToLocation({ position }) {
+  const FlyToLocation = ({ position }) => {
     const map = useMap();
-    if (position) map.flyTo(position, 15);
+    useEffect(() => {
+      if (position) map.flyTo(position, 15);
+    }, [position, map]);
+
     return null;
-  }
+  };
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -69,15 +88,15 @@ export default function FileComplaint() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        const pos = [latitude, longitude];
-        setMarkerPosition(pos);
+        const coords = [latitude, longitude];
+        setMarkerPosition(coords);
         setFormData((prev) => ({
           ...prev,
           location: `${latitude}, ${longitude}`,
         }));
       },
-      (err) => {
-        toast.error("Unable to retrieve your location.", err);
+      () => {
+        toast.error("Unable to retrieve your location.");
       }
     );
   };
@@ -86,8 +105,8 @@ export default function FileComplaint() {
     const file = event.target.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("image", file);
+    const imgFormData = new FormData();
+    imgFormData.append("image", file);
 
     setUploading(true);
 
@@ -96,7 +115,7 @@ export default function FileComplaint() {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/upload-image`,
         {
           method: "POST",
-          body: formData,
+          body: imgFormData,
         }
       );
 
@@ -105,10 +124,10 @@ export default function FileComplaint() {
         setFormData((prev) => ({ ...prev, image: data.imageUrl }));
         toast.success("Image uploaded successfully!");
       } else {
-        toast.error("Image upload failed. Try again.");
+        toast.error(data.error || "Image upload failed.");
       }
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.error("Image upload error:", error);
       toast.error("Failed to upload image.");
     } finally {
       setUploading(false);
@@ -118,13 +137,14 @@ export default function FileComplaint() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      if (!token) {
-        toast.error("User not authenticated");
-        return;
-      }
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token) {
+      toast.error("User not authenticated");
+      return;
+    }
 
+    try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaint`,
         {
@@ -140,17 +160,13 @@ export default function FileComplaint() {
       const data = await response.json();
       if (response.ok) {
         toast.success("Complaint filed successfully!");
-        const role = typeof window !== "undefined" ? localStorage.getItem("userRole") : null;
-        if (role === "citizen") {
-          router.push("/citizen");
-        } else {
-          router.push("/");
-        }
+        const role = localStorage.getItem("userRole");
+        router.push(role === "citizen" ? "/citizen" : "/");
       } else {
-        toast.error(data.error || "Something went wrong!");
+        toast.error(data.error || "Failed to file complaint");
       }
     } catch (error) {
-      console.error("Error filing complaint:", error);
+      console.error("Error:", error);
       toast.error("Failed to submit complaint.");
     }
   };
@@ -164,13 +180,16 @@ export default function FileComplaint() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6 p-6">
+          {/* Category */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Issue Category</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Issue Category
+            </label>
             <select
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-900 focus:border-green-900 transition"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
               required
             >
               <option value="">Select an issue category</option>
@@ -183,34 +202,17 @@ export default function FileComplaint() {
             </select>
           </div>
 
+          {/* Location Picker */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <label className="block text-sm font-medium text-gray-700">Location</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Location
+              </label>
               <button
                 type="button"
-                className="text-sm bg-green-100 text-primary px-3 py-1 rounded-full hover:bg-green-200 transition flex items-center"
                 onClick={getCurrentLocation}
+                className="text-sm bg-green-100 text-primary px-3 py-1 rounded-full hover:bg-green-200 transition"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 mr-1"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
                 Use Current Location
               </button>
             </div>
@@ -230,7 +232,8 @@ export default function FileComplaint() {
             {markerPosition && (
               <div className="bg-green-50 p-3 rounded-lg">
                 <p className="text-sm text-primary">
-                  <span className="font-medium">Selected Location:</span> {formData.location}
+                  <span className="font-medium">Selected Location:</span>{" "}
+                  {formData.location}
                 </p>
               </div>
             )}
@@ -241,13 +244,13 @@ export default function FileComplaint() {
               Upload Photo Evidence
             </label>
             <div className="flex items-center justify-center w-full">
-              <label className="flex flex-col w-full h-32 border-2 border-dashed border-gray-300 hover:border-green-600 rounded-lg cursor-pointer transition hover:bg-gray-50">
-                <div className="flex flex-col items-center justify-center pt-7">
+              <label className="flex flex-col w-full h-64 border-2 border-dashed border-gray-300 hover:border-green-600 rounded-lg cursor-pointer transition hover:bg-gray-50 overflow-hidden">
+                <div className="flex flex-col items-center justify-center w-full h-full p-4">
                   {formData.image ? (
                     <img
                       src={formData.image}
                       alt="Uploaded"
-                      className="h-full w-full object-cover rounded-md"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <>
@@ -266,7 +269,9 @@ export default function FileComplaint() {
                         />
                       </svg>
                       <p className="pt-1 text-sm text-gray-500">
-                        {uploading ? "Uploading..." : "Click to upload an image"}
+                        {uploading
+                          ? "Uploading..."
+                          : "Click to upload an image"}
                       </p>
                     </>
                   )}
@@ -282,51 +287,50 @@ export default function FileComplaint() {
             </div>
           </div>
 
+          {/* Ward, City, State */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Ward Number</label>
-              <input
-                type="number"
-                name="ward_no"
-                value={formData.ward_no}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-800 focus:border-green-800 transition"
-                required
-                placeholder="Ward number"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">City</label>
-              <input
-                type="text"
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-800 focus:border-green-800 transition"
-                required
-                placeholder="City name"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">State</label>
-              <input
-                type="text"
-                name="state"
-                value={formData.state}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-800 focus:border-green-800 transition"
-                required
-                placeholder="State"
-              />
-            </div>
+            {[
+              {
+                name: "ward_no",
+                label: "Ward Number",
+                type: "number",
+                placeholder: "Ward number",
+              },
+              {
+                name: "city",
+                label: "City",
+                type: "text",
+                placeholder: "City name",
+              },
+              {
+                name: "state",
+                label: "State",
+                type: "text",
+                placeholder: "State",
+              },
+            ].map((field) => (
+              <div key={field.name} className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  {field.label}
+                </label>
+                <input
+                  type={field.type}
+                  name={field.name}
+                  value={formData[field.name]}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  required
+                  placeholder={field.placeholder}
+                />
+              </div>
+            ))}
           </div>
 
+          {/* Submit */}
           <div className="pt-4">
             <button
               type="submit"
-              className="w-full bg-primary text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-900 transition focus:outline-none focus:ring-2 focus:ring-green-800 focus:ring-offset-2 disabled:opacity-50"
+              className="w-full bg-primary text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-900 transition"
               disabled={uploading}
             >
               {uploading ? (
@@ -344,12 +348,12 @@ export default function FileComplaint() {
                       r="10"
                       stroke="currentColor"
                       strokeWidth="4"
-                    ></circle>
+                    />
                     <path
                       className="opacity-75"
                       fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
                   </svg>
                   Processing...
                 </span>
