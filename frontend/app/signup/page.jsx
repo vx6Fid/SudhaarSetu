@@ -1,17 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 function SignupPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState("");
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
   const [ward, setWard] = useState("");
   const [password, setPassword] = useState("");
+  const [organization, setOrganization] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +27,16 @@ function SignupPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, email, password, phone, city, state, ward }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          phone,
+          city,
+          state,
+          ward,
+          org_name: organization,
+        }),
       });
 
       const data = await response.json();
@@ -38,11 +48,28 @@ function SignupPage() {
       // Redirect to login after successful signup
       window.location.href = "/login";
     } catch (err) {
-      setError("Failed!, " + err.message);
+      toast.error(err.message);
+      setError("Failed to sign up. Please try again.");
+      console.error("Signup error:", err);
     } finally {
       setLoading(false);
     }
   };
+
+  // Fetch Organizations
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/api/admin/organizations`);
+        const data = await response.json();
+        setOrganization(data.organizations);
+      } catch (error) {
+        console.error("Error fetching organizations:", error);
+      }
+    };
+
+    fetchOrganizations();
+  }, []);
 
   return (
     <div className="h-screen flex items-center justify-center bg-[#F9F5EC]">
@@ -65,6 +92,20 @@ function SignupPage() {
 
         {/* Form */}
         <form onSubmit={handleSignup} className="space-y-4">
+          {/* Organization Name */}
+          <div className="relative">
+            <label className="absolute top-[-10px] left-3 bg-background text-sm px-1 text-gray-600">
+              Organization Name
+            </label>
+            <select className="w-full border border-gray-500 bg-amber-50 px-3 py-2 rounded">
+              {organization.map((org, index) => (
+                <option key={index} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Name */}
           <div className="relative">
             <label className="absolute top-[-10px] left-3 bg-background text-sm px-1 text-gray-600">
@@ -154,7 +195,6 @@ function SignupPage() {
               required
             />
           </div>
-
 
           {/* Password */}
           <div className="relative">

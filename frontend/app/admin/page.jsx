@@ -837,7 +837,7 @@ function Page() {
                   {/* Format dropdown (appears on hover) */}
                   <div className="absolute z-10 left-0 md:left-auto md:right-0 mt-2 w-44 origin-top-right rounded-xl bg-white shadow-xl ring-1 ring-gray-500 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-1 group-hover:translate-y-0">
                     <div className="py-1.5">
-                      <button className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition flex items-center group">
+                      <button className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition flex items-center group">
                         <div className="p-1.5 mr-3 rounded-lg bg-amber-100 group-hover:bg-amber-200 transition">
                           <svg
                             className="h-4 w-4 text-amber-600"
@@ -860,7 +860,7 @@ function Page() {
                           </div>
                         </div>
                       </button>
-                      <button className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition flex items-center group">
+                      <button className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition flex items-center group">
                         <div className="p-1.5 mr-3 rounded-lg bg-orange-100 group-hover:bg-orange-200 transition">
                           <svg
                             className="h-4 w-4 text-orange-600"

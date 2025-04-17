@@ -24,7 +24,22 @@ function Page() {
   }, []);
 
   if (!adminDetails) {
-    return <p className="text-center mt-10">Loading...</p>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[200px] gap-4">
+        {/* Animated spinner */}
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+
+        {/* Loading text with subtle animation */}
+        <p className="text-gray-600 text-lg font-medium animate-pulse">
+          Loading user data...
+        </p>
+
+        {/* Optional progress indicator */}
+        <div className="w-1/2 bg-gray-200 rounded-full h-1.5 max-w-xs">
+          <div className="bg-blue-600 h-1.5 rounded-full w-1/2 animate-[progress_2s_ease-in-out_infinite]"></div>
+        </div>
+      </div>
+    );
   }
 
   return <ViewProfile userDet={adminDetails} />;

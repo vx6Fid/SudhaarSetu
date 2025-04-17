@@ -31,7 +31,9 @@ router.post(
         [name]
       );
       if (existingOrg.rows.length > 0) {
-        return res.status(400).json({ error: "Organization Name already exists" });
+        return res
+          .status(400)
+          .json({ error: "Organization Name already exists" });
       }
 
       // Insert organization
@@ -86,6 +88,37 @@ router.get("/admin/organizations", async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error while fetching organizations.",
+    });
+  }
+});
+
+// Fetching org details
+router.post("/organizations", async (req, res) => {
+  const { org_name } = req.body;
+
+  if (!org_name) {
+    return res.status(400).json({ error: "Missing org_name in request body" });
+  }
+
+  try {
+    const result = await pool.query(
+      "SELECT * FROM organizations WHERE name = $1",
+      [org_name.trim()]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Organization not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      organization: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Error fetching organization:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching organization.",
     });
   }
 });
@@ -151,9 +184,9 @@ router.delete(
       );
 
       if (officerCountUpdate.rowCount === 0) {
-        return res
-          .status(400)
-          .json({ error: "Organization not found or officer count update failed" });
+        return res.status(400).json({
+          error: "Organization not found or officer count update failed",
+        });
       }
 
       return res.status(200).json({
@@ -259,79 +292,74 @@ router.post(
 );
 
 // Admin Assigning a Field Officer to a Complaint
-router.post(
-  "/admin/assign-field-officer",
-  authMiddleware,
-  async (req, res) => {
-    const { admin_id, complaint_id, field_officer_id, officerName } = req.body;
+router.post("/admin/assign-field-officer", authMiddleware, async (req, res) => {
+  const { admin_id, complaint_id, field_officer_id, officerName } = req.body;
 
-    // Validate required fields
-    if (!admin_id || !complaint_id || !field_officer_id) {
-      return res.status(400).json({
-        error: "admin_id, complaint_id, and field_officer_id are required",
-      });
+  // Validate required fields
+  if (!admin_id || !complaint_id || !field_officer_id) {
+    return res.status(400).json({
+      error: "admin_id, complaint_id, and field_officer_id are required",
+    });
+  }
+
+  try {
+    // Verify that the admin exists
+    const adminCheck = await pool.query("SELECT id FROM admins WHERE id = $1", [
+      admin_id,
+    ]);
+    if (adminCheck.rows.length === 0) {
+      return res
+        .status(403)
+        .json({ error: "Unauthorized: Admin does not exist" });
     }
 
-    try {
-      // Verify that the admin exists
-      const adminCheck = await pool.query(
-        "SELECT id FROM admins WHERE id = $1",
-        [admin_id]
-      );
-      if (adminCheck.rows.length === 0) {
-        return res
-          .status(403)
-          .json({ error: "Unauthorized: Admin does not exist" });
-      }
+    // Check if the complaint exists
+    const complaintCheck = await pool.query(
+      "SELECT id, field_officer_id FROM complaints WHERE id = $1",
+      [complaint_id]
+    );
+    if (complaintCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Complaint not found" });
+    }
 
-      // Check if the complaint exists
-      const complaintCheck = await pool.query(
-        "SELECT id, field_officer_id FROM complaints WHERE id = $1",
-        [complaint_id]
-      );
-      if (complaintCheck.rows.length === 0) {
-        return res.status(404).json({ error: "Complaint not found" });
-      }
+    // Check if the field officer exists
+    const officerCheck = await pool.query(
+      "SELECT id FROM officers WHERE id = $1 AND role = 'field_officer'",
+      [field_officer_id]
+    );
+    if (officerCheck.rows.length === 0) {
+      return res.status(400).json({ error: "Invalid field officer ID" });
+    }
 
-      // Check if the field officer exists
-      const officerCheck = await pool.query(
-        "SELECT id FROM officers WHERE id = $1 AND role = 'field_officer'",
-        [field_officer_id]
-      );
-      if (officerCheck.rows.length === 0) {
-        return res.status(400).json({ error: "Invalid field officer ID" });
-      }
+    // Check if the complaint is already assigned
+    if (complaintCheck.rows[0].field_officer_id) {
+      return res
+        .status(400)
+        .json({ error: "Complaint already assigned to a field officer" });
+    }
 
-      // Check if the complaint is already assigned
-      if (complaintCheck.rows[0].field_officer_id) {
-        return res
-          .status(400)
-          .json({ error: "Complaint already assigned to a field officer" });
-      }
-
-      // Assign the field officer to the complaint
-      const updateQuery = `
+    // Assign the field officer to the complaint
+    const updateQuery = `
             UPDATE complaints 
             SET field_officer_id = $1, officer_name = $2
             WHERE id = $3 
             RETURNING id, field_officer_id
         `;
-      const result = await pool.query(updateQuery, [
-        field_officer_id,
-        officerName,
-        complaint_id,
-      ]);
+    const result = await pool.query(updateQuery, [
+      field_officer_id,
+      officerName,
+      complaint_id,
+    ]);
 
-      res.json({
-        message: "Field officer assigned successfully",
-        complaint: result.rows[0],
-      });
-    } catch (error) {
-      console.error("Assignment error:", error);
-      res.status(500).json({ error: "Server error" });
-    }
+    res.json({
+      message: "Field officer assigned successfully",
+      complaint: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Assignment error:", error);
+    res.status(500).json({ error: "Server error" });
   }
-);
+});
 
 // Fetching Field Officers
 router.get("/officers", async (req, res) => {

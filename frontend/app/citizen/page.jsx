@@ -13,6 +13,7 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { motion, AnimatePresence } from "framer-motion";
+import toast from "react-hot-toast";
 
 const ComplainCard = dynamic(() => import("../components/ComplainCard"), {
   ssr: false,
@@ -50,14 +51,8 @@ function Page() {
   const [userName, setUserName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [likeComplaint, setLikeComplaint] = useState([]);
-
-  const categories = [
-    "Road Repair",
-    "Water Supply",
-    "Garbage Collection",
-    "Pothole",
-  ];
-  const wards = ["Ward 1", "Ward 2", "Ward 3", "Ward 16", "Ward 17"];
+  const [categories, setCategories] = useState([]);
+  const [wards, setWards] = useState([]);
 
   useEffect(() => {
     const fetchComplaints = async () => {
@@ -85,12 +80,43 @@ function Page() {
         setComplaints([]); // Clear first for animation
         setTimeout(() => setComplaints(data.complaints || []), 300);
       } catch (error) {
+        toast.error("Error fetching complaints:", error);
         console.error("Error fetching complaints:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
+    const fetchOrganizations = async () => {
+      try {
+        const orgName = localStorage.getItem("user-org");
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/organizations`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ org_name: orgName }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch organization");
+        }
+
+        setCategories(data.organization.categories);
+        setWards(data.organization.wards);
+      } catch (error) {
+        toast.error("Error Fetching Categories and Wards");
+        console.log("fetchOrganizations error:", error.message);
+      }
+    };
+
+    fetchOrganizations();
     const timer = setTimeout(fetchComplaints, 500); // Delay added for animation
     return () => clearTimeout(timer);
   }, [selectedCategory, selectedWard, searchQuery]);

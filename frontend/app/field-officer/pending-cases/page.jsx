@@ -66,6 +66,7 @@ function PendingCases() {
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/complaints`
         );
         url.searchParams.append("ward", ward);
+        
 
         const response = await fetch(url);
         const data = await response.json();

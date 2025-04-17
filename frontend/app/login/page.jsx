@@ -39,7 +39,7 @@ function LoginPage() {
 
       const data = await response.json();
       const userData = role === "citizen" ? data.user : (role=="admin" ? data.admin : data.officer);
-
+      console.log(userData);
       localStorage.setItem("token", data.token);
       localStorage.setItem("userRole", role);
       localStorage.setItem("userId", userData?.id || "");
