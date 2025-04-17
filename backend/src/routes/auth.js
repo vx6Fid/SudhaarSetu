@@ -6,7 +6,7 @@ const pool = require("../config/db");
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// User Singup
+// User Signup
 router.post("/user/signup", async (req, res) => {
   const { name, email, password, phone, city, state, ward, org_name } =
     req.body;

@@ -17,7 +17,7 @@ export default function FileComplaint() {
     category: "",
     location: "",
     image: "",
-    ward_no: "",
+    ward: "",
     city: "",
     state: "",
     org_name: "",
@@ -59,14 +59,14 @@ export default function FileComplaint() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || "Failed to fetch organization");
+          console.error("Error response:", await response.text());
         }
 
         setCategories(data.organization.categories);
         setWards(data.organization.wards);
       } catch (error) {
         toast.error("Error Fetching Categories and Wards");
-        console.log("fetchOrganizations error:", error.message);
+        console.log("fetchOrganizations error:", await error.message);
       }
     };
 
@@ -167,11 +167,12 @@ export default function FileComplaint() {
         setFormData((prev) => ({ ...prev, image: data.imageUrl }));
         toast.success("Image uploaded successfully!");
       } else {
-        toast.error(data.error || "Image upload failed.",data.error);
+        toast.error("Image upload failed.");
+        console.error("Image upload error:", await response.text());
       }
     } catch (error) {
       console.error("Image upload error:", error.message);
-      toast.error("Failed to upload image.",error.message);
+      toast.error("Failed to upload image.");
     } finally {
       setUploading(false);
     }
@@ -206,7 +207,8 @@ export default function FileComplaint() {
         const role = localStorage.getItem("userRole");
         router.push(role === "citizen" ? "/citizen" : "/");
       } else {
-        toast.error(data.error || "Failed to file complaint");
+        console.error("Image upload error:", data.error);
+        toast.error("Failed to upload image.");
       }
     } catch (error) {
       console.error("Error:", error);
