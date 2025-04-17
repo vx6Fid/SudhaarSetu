@@ -224,7 +224,7 @@ router.get("/complaints", async (req, res) => {
 
 // Fetch Complaint by Complaint ID
 router.get("/complaint/:complaint_id", async (req, res) => {
-  const { complaint_id } = req.params; // Corrected param name
+  const { complaint_id } = req.params;
 
   if (!complaint_id) {
     return res.status(400).json({ error: "Complaint ID is required" });
@@ -240,7 +240,7 @@ router.get("/complaint/:complaint_id", async (req, res) => {
       return res.status(404).json({ error: "Complaint not found" });
     }
 
-    res.json({ complaint: result.rows[0] }); // Return single complaint object, not an array
+    res.json({ complaint: result.rows[0] }); 
   } catch (error) {
     console.error("Error fetching complaint:", error);
     res.status(500).json({ error: "Server error" });

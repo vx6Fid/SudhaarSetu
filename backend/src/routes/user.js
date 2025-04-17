@@ -34,7 +34,7 @@ router.get("/user", async (req, res) => {
   }
 });
 
-// Updaate User Details
+// Update User Details
 router.put("/update-user", async (req, res) => {
   const { user_id, role, name, phone, city, ward, state, email, password } =
     req.body;

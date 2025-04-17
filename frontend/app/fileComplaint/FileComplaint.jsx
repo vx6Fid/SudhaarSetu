@@ -162,13 +162,14 @@ export default function FileComplaint() {
         }
       );
 
-      const data = await response.json();
       if (response.ok) {
+        const data = await response.json();
         setFormData((prev) => ({ ...prev, image: data.imageUrl }));
         toast.success("Image uploaded successfully!");
       } else {
+        const errorText = await response.text();
         toast.error("Image upload failed.");
-        console.error("Image upload error:", await response.text());
+        console.error("Image upload error:", errorText);
       }
     } catch (error) {
       console.error("Image upload error:", error.message);
@@ -207,8 +208,8 @@ export default function FileComplaint() {
         const role = localStorage.getItem("userRole");
         router.push(role === "citizen" ? "/citizen" : "/");
       } else {
-        console.error("Image upload error:", data.error);
-        toast.error("Failed to upload image.");
+        console.error("Error Filling Complaint: ", data.error);
+        toast.error("Failed to file complaint.");
       }
     } catch (error) {
       console.error("Error:", error);

@@ -26,7 +26,7 @@ function ComplainCard({ complaint, isLiked }) {
   const [commentsLength, setCommentsLength] = useState(
     complaint.total_comments || 0
   );
-  const [comments, setComments] = useState(complaint.commentsList || []);
+  const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
   const [hasLiked, setHasLiked] = useState(isLiked);

@@ -666,6 +666,9 @@ const Page = () => {
                             <motion.button
                               className="flex items-center justify-end gap-2 text-secondary hover:text-primary font-medium transition w-full"
                               whileHover={{ x: 5 }}
+                              onClick={() =>
+                                router.push(`/citizen/my-complaints/${complaint.id}`)
+                              }
                             >
                               <span>View Details</span>
                               <FiChevronRight />
