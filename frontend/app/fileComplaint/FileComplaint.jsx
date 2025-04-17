@@ -23,6 +23,9 @@ export default function FileComplaint() {
     org_name: "",
   });
 
+  const [categories, setCategories] = useState([]);
+  const [wards, setWards] = useState([]);
+
   const [uploading, setUploading] = useState(false);
   const [markerPosition, setMarkerPosition] = useState(null);
 
@@ -37,7 +40,47 @@ export default function FileComplaint() {
         org_name: localStorage.getItem("user-org") || "",
       }));
     }
+
+    const fetchOrganizations = async () => {
+      try {
+        const orgName = localStorage.getItem("user-org");
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/organizations`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ org_name: orgName }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch organization");
+        }
+
+        setCategories(data.organization.categories);
+        setWards(data.organization.wards);
+      } catch (error) {
+        toast.error("Error Fetching Categories and Wards");
+        console.log("fetchOrganizations error:", error.message);
+      }
+    };
+
+    fetchOrganizations();
   }, []);
+
+  useEffect(() => {
+    if (categories.length > 1 && !formData.category) {
+      setFormData((prev) => ({
+        ...prev,
+        category: categories[1],
+      }));
+    }
+  }, [categories]);
 
   const L = typeof window !== "undefined" ? require("leaflet") : null;
 
@@ -192,13 +235,11 @@ export default function FileComplaint() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg"
               required
             >
-              <option value="">Select an issue category</option>
-              <option value="Garbage Collection">Garbage Collection</option>
-              <option value="Water Leakage">Water Leakage</option>
-              <option value="Street Light Issue">Street Light Issue</option>
-              <option value="Road Maintenance">Road Maintenance</option>
-              <option value="Public Health">Public Health</option>
-              <option value="Illegal Construction">Illegal Construction</option>
+              {categories.map((category, index) => (
+                <option key={index} value={category}>
+                  {category}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -287,15 +328,28 @@ export default function FileComplaint() {
             </div>
           </div>
 
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Ward
+            </label>
+            <select
+              name="ward"
+              value={formData.ward}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              required
+            >
+              {wards.map((ward, index) => (
+                <option key={index} value={ward}>
+                  {ward}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Ward, City, State */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              {
-                name: "ward_no",
-                label: "Ward Number",
-                type: "number",
-                placeholder: "Ward number",
-              },
               {
                 name: "city",
                 label: "City",
